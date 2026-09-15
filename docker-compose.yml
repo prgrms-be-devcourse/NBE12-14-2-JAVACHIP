@@ -15,20 +15,20 @@ services:
       timeout: 5s
       retries: 10
 
-  back:
-    build:
-      context: ./back
-      dockerfile: Dockerfile
-    container_name: budzet-back
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/budzet?serverTimezone=Asia/Seoul
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-    ports:
-      - "8080:8080"
-    depends_on:
-      mysql:
-        condition: service_healthy
+#  back:
+#    build:
+#      context: ./back
+#      dockerfile: Dockerfile
+#    container_name: budzet-back
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/budzet?serverTimezone=Asia/Seoul
+#      SPRING_DATASOURCE_USERNAME: root
+#      SPRING_DATASOURCE_PASSWORD: root
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      mysql:
+#        condition: service_healthy
 
 volumes:
   mysql-data:
