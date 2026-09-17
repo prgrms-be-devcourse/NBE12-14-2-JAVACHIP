@@ -18,6 +18,8 @@ import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.repository.RoomRepository;
 import com.budzet.domain.room.repository.UserRoomConnectionRepository;
+import com.budzet.domain.user.entity.User;
+import com.budzet.domain.user.repository.UserRepository;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
@@ -42,12 +44,17 @@ class RoomServiceTest {
     @Mock
     private UserRoomConnectionRepository userRoomConnectionRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private RoomService roomService;
 
     @Test
     @DisplayName("모임 생성 시, 설정한 초기 자금은 총/가용 예산 둘 다 반영된다.")
     void createRoom_initializesAvailableBudgetWithTotalBudget() {
+        Long userId = 1L;
+        User user = mock(User.class);
         RoomCreateRequest request = new RoomCreateRequest(
                 "한양대 사진동아리 렌즈",
                 100_000L,
@@ -55,8 +62,9 @@ class RoomServiceTest {
         );
         when(roomRepository.save(any(Room.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.getReferenceById(userId)).thenReturn(user);
 
-        RoomCreateResponse response = roomService.createRoom(request);
+        RoomCreateResponse response = roomService.createRoom(userId, request);
 
         ArgumentCaptor<Room> roomCaptor = ArgumentCaptor.forClass(Room.class);
         verify(roomRepository).save(roomCaptor.capture());
@@ -68,6 +76,17 @@ class RoomServiceTest {
         assertThat(savedRoom.getAvailableBudget()).isEqualTo(100_000L);
         assertThat(savedRoom.getCurrency()).isEqualTo(Currency.KRW);
         assertThat(response.availableBudget()).isEqualTo(100_000L);
+
+        ArgumentCaptor<UserRoomConnection> connectionCaptor =
+                ArgumentCaptor.forClass(UserRoomConnection.class);
+        verify(userRoomConnectionRepository).save(connectionCaptor.capture());
+
+        UserRoomConnection ownerConnection = connectionCaptor.getValue();
+        verify(userRepository).getReferenceById(userId);
+        assertThat(ownerConnection.getUser()).isSameAs(user);
+        assertThat(ownerConnection.getRoom()).isSameAs(savedRoom);
+        assertThat(ownerConnection.getAuthority()).isEqualTo(Authority.OWNER);
+        assertThat(ownerConnection.isJoined()).isTrue();
     }
 
     @Test
