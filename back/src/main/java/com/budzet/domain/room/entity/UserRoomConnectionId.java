@@ -11,4 +11,9 @@ public class UserRoomConnectionId implements Serializable {
 
     private Long user;
     private Long room;
+
+    public UserRoomConnectionId(Long user, Long room) {
+        this.user = user;
+        this.room = room;
+    }
 }

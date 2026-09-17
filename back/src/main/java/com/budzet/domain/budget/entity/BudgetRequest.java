@@ -48,4 +48,11 @@ public class BudgetRequest {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    public BudgetRequest(Room room, String reason, Long requestedAmount){
+        this.room = room;
+        this.reason = reason;
+        this.requestedAmount = requestedAmount;
+    }
+
 }
