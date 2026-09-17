@@ -28,7 +28,7 @@ public class BudgetRequestService {
         Room room = this.roomRepository.findById(roomId).get();
         //신청예산의 가용예산 초과여부 처리
         if(room.getAvailableBudget() < requestedAmount)
-            throw new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM);
+            throw new BusinessException(ErrorCode.REQUEST_AMOUNT_OVER_BUDGET);
 
         budgetRequestRepository.save(new BudgetRequest(room, reason, requestedAmount));
     }
