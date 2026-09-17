@@ -1,0 +1,93 @@
+package com.budzet.domain.room.controller;
+
+import com.budzet.domain.room.dto.RoomCreateRequest;
+import com.budzet.domain.room.dto.RoomCreateResponse;
+import com.budzet.domain.room.dto.RoomDetailResponse;
+import com.budzet.domain.room.dto.RoomListResponse;
+import com.budzet.domain.room.dto.RoomUpdateRequest;
+import com.budzet.domain.room.service.RoomService;
+import com.budzet.global.api.ApiResponse;
+import com.budzet.global.rq.Rq;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/rooms")
+public class RoomController {
+
+    private final RoomService roomService;
+    private final Rq rq;
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<RoomCreateResponse>> createRoom(
+            @RequestBody @Valid RoomCreateRequest request
+    ) {
+        Long userId = rq.getActor().getId();
+        RoomCreateResponse response = roomService.createRoom(userId, request);
+        ApiResponse<RoomCreateResponse> apiResponse = ApiResponse.success(
+                HttpStatus.CREATED,
+                "모임이 생성되었습니다.",
+                response);
+
+        return ResponseEntity
+                .status(apiResponse.resultCode())
+                .body(apiResponse);
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<RoomListResponse>> getRooms() {
+        Long userId = rq.getActor().getId();
+        RoomListResponse response = roomService.getRooms(userId);
+        ApiResponse<RoomListResponse> apiResponse = ApiResponse.success(
+                HttpStatus.OK,
+                "모임 목록을 조회했습니다.",
+                response);
+
+        return ResponseEntity
+                .status(apiResponse.resultCode())
+                .body(apiResponse);
+    }
+
+    @GetMapping("/{roomId}")
+    public ResponseEntity<ApiResponse<RoomDetailResponse>> getRoom(
+            @PathVariable Long roomId
+    ) {
+        Long userId = rq.getActor().getId();
+        RoomDetailResponse response = roomService.getRoom(userId, roomId);
+        ApiResponse<RoomDetailResponse> apiResponse = ApiResponse.success(
+                HttpStatus.OK,
+                "모임을 조회했습니다.",
+                response);
+
+        return ResponseEntity
+                .status(apiResponse.resultCode())
+                .body(apiResponse);
+    }
+
+    @PatchMapping("/{roomId}")
+    public ResponseEntity<ApiResponse<RoomDetailResponse>> updateRoom(
+            @PathVariable Long roomId,
+            @RequestBody @Valid RoomUpdateRequest request
+    ) {
+        Long userId = rq.getActor().getId();
+        RoomDetailResponse response = roomService.updateRoom(userId, roomId, request);
+        ApiResponse<RoomDetailResponse> apiResponse = ApiResponse.success(
+                HttpStatus.OK,
+                "모임이 수정되었습니다.",
+                response);
+
+        return ResponseEntity
+                .status(apiResponse.resultCode())
+                .body(apiResponse);
+    }
+}
