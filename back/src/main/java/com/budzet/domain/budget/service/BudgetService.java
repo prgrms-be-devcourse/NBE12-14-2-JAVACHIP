@@ -5,7 +5,9 @@ import com.budzet.domain.budget.dto.BudgetResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.repository.BudgetChangeRepository;
 import com.budzet.domain.room.entity.Room;
+import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.repository.RoomRepository;
+import com.budzet.domain.room.repository.UserRoomConnectionRepository;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -20,25 +22,25 @@ public class BudgetService {
 
     private final RoomRepository roomRepository;
     private final BudgetChangeRepository budgetChangeRepository;
+    private final UserRoomConnectionRepository userRoomConnectionRepository;
 
     @Transactional(readOnly = true)
-    public BudgetResponse getBudget(Long roomId){
-       Room room = this.findByRoomId(roomId);
+    public BudgetResponse getBudget(Long roomId, Long userId){
 
+        validateRoomMember(roomId, userId);
+        Room room = findByRoomId(roomId);
         if(room.getTotalBudget() == null || room.getAvailableBudget() == null){
             throw new BusinessException(ErrorCode.BUDGET_NOT_FOUND);
         }
-
         return BudgetResponse.from(room);
     }
 
     @Transactional(readOnly = true)
-    public BudgetHistoryResponse getBudgetHistory(Long roomId) {
+    public BudgetHistoryResponse getBudgetHistory(Long roomId, Long userId) {
 
-        findByRoomId(roomId); //단순 방 존재 여부 확인용
-
+        validateRoomMember(roomId, userId);
+        findByRoomId(roomId);
         List<BudgetChange> budgetChanges = budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId);
-
         return BudgetHistoryResponse.from(budgetChanges);
     }
 
@@ -46,10 +48,14 @@ public class BudgetService {
 
     private Room findByRoomId(Long roomId){
 
-        //Room 조회 및 Room존재여부 확인 -> 중복 제거하기 위해 메서드 분리
-
-        return this.roomRepository.findById(roomId)
+        return roomRepository.findById(roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+    }
+
+    private UserRoomConnection validateRoomMember(Long roomId, Long userId){
+
+        return userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId,roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM));
     }
 }
 

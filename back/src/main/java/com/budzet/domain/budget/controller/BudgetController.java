@@ -3,7 +3,9 @@ package com.budzet.domain.budget.controller;
 import com.budzet.domain.budget.dto.BudgetHistoryResponse;
 import com.budzet.domain.budget.dto.BudgetResponse;
 import com.budzet.domain.budget.service.BudgetService;
+import com.budzet.domain.user.entity.User;
 import com.budzet.global.api.ApiResponse;
+import com.budzet.global.rq.Rq;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,14 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class BudgetController {
 
     private final BudgetService budgetService;
+    private final Rq rq;
 
     @GetMapping("/{roomId}/budget")
     public ApiResponse<BudgetResponse> getBudget(
             @PathVariable Long roomId){
 
-        //예산조회
+        User user = rq.getActor();
 
-        BudgetResponse budgetResponse = this.budgetService.getBudget(roomId);
+        BudgetResponse budgetResponse = budgetService.getBudget(roomId,user.getId());
         return ApiResponse.success(
                 HttpStatus.OK,
                 "예산 조회에 성공하였습니다.",
@@ -37,9 +40,9 @@ public class BudgetController {
             @PathVariable Long roomId
     ){
 
-        //예산 변동내역 조회
+        User user = rq.getActor();
 
-        BudgetHistoryResponse budgetHistoryResponse = this.budgetService.getBudgetHistory(roomId);
+        BudgetHistoryResponse budgetHistoryResponse = budgetService.getBudgetHistory(roomId, user.getId());
         return ApiResponse.success(
                 HttpStatus.OK,
                 "예산 변동 목록 조회에 성공하였습니다.",
