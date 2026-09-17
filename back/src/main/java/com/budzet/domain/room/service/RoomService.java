@@ -2,8 +2,10 @@ package com.budzet.domain.room.service;
 
 import com.budzet.domain.room.dto.RoomCreateRequest;
 import com.budzet.domain.room.dto.RoomCreateResponse;
+import com.budzet.domain.room.dto.RoomListResponse;
 import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.repository.RoomRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,5 +33,13 @@ public class RoomService {
         // TODO: Room 저장 후 UserRoomConnection을 OWNER, joined=true로 함께 저장하기
 
         return RoomCreateResponse.from(savedRoom);
+    }
+
+    // TODO: (김영우)
+    // TODO: 페이징 처리 추가할지 논의한 후, 결정되면 추가 구현하기
+    @Transactional(readOnly = true)
+    public RoomListResponse getRooms(Long userId) {
+        List<Room> rooms = roomRepository.findAllJoinedRoomsByUserId(userId);
+        return RoomListResponse.from(rooms);
     }
 }
