@@ -2,9 +2,12 @@ package com.budzet.domain.room.service;
 
 import com.budzet.domain.room.dto.RoomCreateRequest;
 import com.budzet.domain.room.dto.RoomCreateResponse;
+import com.budzet.domain.room.dto.RoomDetailResponse;
 import com.budzet.domain.room.dto.RoomListResponse;
 import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.repository.RoomRepository;
+import com.budzet.global.exception.BusinessException;
+import com.budzet.global.exception.ErrorCode;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,5 +44,16 @@ public class RoomService {
     public RoomListResponse getRooms(Long userId) {
         List<Room> rooms = roomRepository.findAllJoinedRoomsByUserId(userId);
         return RoomListResponse.from(rooms);
+    }
+
+    @Transactional(readOnly = true)
+    public RoomDetailResponse getRoom(Long userId, Long roomId) {
+        Room room = roomRepository.findJoinedRoomByIdAndUserId(roomId, userId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "존재하지 않는 모임입니다."
+                ));
+
+        return RoomDetailResponse.from(room);
     }
 }

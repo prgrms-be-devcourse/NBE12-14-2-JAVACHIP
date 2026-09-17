@@ -5,18 +5,20 @@ import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.service.UserRoomConnectionService;
 import com.budzet.global.api.ApiResponse;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.verify;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class UserRoomConnectionControllerTest {
 
     @Test
+    @DisplayName("멤버 권한 조회 성공")
     void getAuthority_success() {
 
         UserRoomConnectionService service =
@@ -43,6 +45,7 @@ class UserRoomConnectionControllerTest {
     }
 
     @Test
+    @DisplayName("모임 멤버 목록 조회 성공")
     void getMembers_success() {
 
         UserRoomConnectionService service =
@@ -69,7 +72,8 @@ class UserRoomConnectionControllerTest {
         assertEquals(Authority.OWNER, response.data().get(0).authority());
     }
 
-    @Test //호출 확인
+    @Test
+    @DisplayName("멤버 강퇴 성공")
     void kickMember_success() {
 
         UserRoomConnectionService service =
@@ -83,4 +87,22 @@ class UserRoomConnectionControllerTest {
         verify(service)
                 .kickMember(1L, 2L);
     }
+
+    @Test
+    @DisplayName("모임 탈퇴 성공")
+    void leaveRoom_success() {
+
+        UserRoomConnectionService service =
+                mock(UserRoomConnectionService.class);
+
+        UserRoomConnectionController controller =
+                new UserRoomConnectionController(service);
+
+        controller.leaveRoom(1L);
+
+        verify(service)
+                .leaveRoom(1L, 2L);
+    }
+
+
 }

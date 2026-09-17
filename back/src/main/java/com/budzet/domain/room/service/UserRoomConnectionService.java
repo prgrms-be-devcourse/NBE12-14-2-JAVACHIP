@@ -1,5 +1,6 @@
 package com.budzet.domain.room.service;
 
+import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.repository.UserRoomConnectionRepository;
 import com.budzet.global.exception.BusinessException;
@@ -41,6 +42,23 @@ public class UserRoomConnectionService {
                         .orElseThrow(() ->
                                 new BusinessException(ErrorCode.MEMBER_NOT_FOUND)
                         );
+
+        userRoomConnectionRepository.delete(connection);
+    }
+
+    @Transactional
+    public void leaveRoom(Long roomId, Long userId) {
+
+        UserRoomConnection connection =
+                userRoomConnectionRepository
+                        .findByUser_IdAndRoom_Id(userId, roomId)
+                        .orElseThrow(() ->
+                                new BusinessException(ErrorCode.MEMBER_NOT_FOUND)
+                        );
+
+        if(connection.getAuthority() == Authority.OWNER) {
+            throw new BusinessException(ErrorCode.CONFLICT);
+        }
 
         userRoomConnectionRepository.delete(connection);
     }

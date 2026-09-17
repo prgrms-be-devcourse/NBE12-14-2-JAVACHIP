@@ -60,4 +60,18 @@ public class UserRoomConnectionController {
                 null
         );
     }
+
+    @DeleteMapping("/{roomId}/members/me")
+    public ApiResponse<Void> leaveRoom(
+            @PathVariable Long roomId
+    ) {
+        //userID 임시 설정 -> 로그인 구현 후 userId 삽입
+        userRoomConnectionService.leaveRoom(roomId, 2L);
+
+        return ApiResponse.success(
+                HttpStatus.OK,
+                "모임 탈퇴 성공",
+                null
+        );
+    }
 }
