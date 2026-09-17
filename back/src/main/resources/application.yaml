@@ -20,3 +20,8 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+
+custom:
+  jwt:
+    secret-pattern: ${JWT_SECRET}
+    expire-millis: "#{1000L * 60 * 60}"
