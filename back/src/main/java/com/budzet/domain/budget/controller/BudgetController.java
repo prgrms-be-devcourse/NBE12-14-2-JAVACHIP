@@ -1,5 +1,6 @@
 package com.budzet.domain.budget.controller;
 
+import com.budzet.domain.budget.dto.BudgetHistoryResponse;
 import com.budzet.domain.budget.dto.BudgetResponse;
 import com.budzet.domain.budget.service.BudgetService;
 import com.budzet.global.api.ApiResponse;
@@ -21,10 +22,27 @@ public class BudgetController {
     public ApiResponse<BudgetResponse> getBudget(
             @PathVariable Long roomId){
 
+        //예산조회
+
         BudgetResponse budgetResponse = this.budgetService.getBudget(roomId);
         return ApiResponse.success(
                 HttpStatus.OK,
                 "예산 조회에 성공하였습니다.",
                 budgetResponse);
+    }
+
+
+    @GetMapping("/{roomId}/budget/history")
+    public ApiResponse<BudgetHistoryResponse> getBudgetHistory(
+            @PathVariable Long roomId
+    ){
+
+        //예산 변동내역 조회
+
+        BudgetHistoryResponse budgetHistoryResponse = this.budgetService.getBudgetHistory(roomId);
+        return ApiResponse.success(
+                HttpStatus.OK,
+                "예산 변동 목록 조회에 성공하였습니다.",
+                budgetHistoryResponse);
     }
 }
