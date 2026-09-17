@@ -39,4 +39,10 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<UserRoomConnection> roomConnections = new ArrayList<>();
+
+    public User(String email, String password, String name){
+        this.email = email;
+        this.password = password;
+        this.name = name;
+    }
 }
