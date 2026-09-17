@@ -4,8 +4,12 @@ import com.budzet.domain.room.dto.RoomCreateRequest;
 import com.budzet.domain.room.dto.RoomCreateResponse;
 import com.budzet.domain.room.dto.RoomDetailResponse;
 import com.budzet.domain.room.dto.RoomListResponse;
+import com.budzet.domain.room.dto.RoomUpdateRequest;
+import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.Room;
+import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.repository.RoomRepository;
+import com.budzet.domain.room.repository.UserRoomConnectionRepository;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import java.util.List;
@@ -18,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class RoomService {
 
     private final RoomRepository roomRepository;
+    private final UserRoomConnectionRepository userRoomConnectionRepository;
 
     // TODO: (김영우)
     // TODO: 인증 연동 후 Long userId를 파라미터로 받기
@@ -50,10 +55,34 @@ public class RoomService {
     public RoomDetailResponse getRoom(Long userId, Long roomId) {
         Room room = roomRepository.findJoinedRoomByIdAndUserId(roomId, userId)
                 .orElseThrow(() -> new BusinessException(
-                        ErrorCode.NOT_FOUND,
-                        "존재하지 않는 모임입니다."
+                        ErrorCode.ROOM_NOT_FOUND
                 ));
 
+        return RoomDetailResponse.from(room);
+    }
+
+    @Transactional
+    public RoomDetailResponse updateRoom(
+            Long userId,
+            Long roomId,
+            RoomUpdateRequest request
+    ) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.ROOM_NOT_FOUND
+                ));
+
+        UserRoomConnection connection = userRoomConnectionRepository
+                .findByUser_IdAndRoom_Id(userId, roomId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.MEMBER_NOT_FOUND
+                ));
+
+        if (connection.getAuthority() != Authority.OWNER) {
+            throw new BusinessException(ErrorCode.OWNER_REQUIRED);
+        }
+
+        room.changeName(request.name());
         return RoomDetailResponse.from(room);
     }
 }
