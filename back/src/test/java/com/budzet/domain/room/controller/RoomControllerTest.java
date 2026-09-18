@@ -3,7 +3,9 @@ package com.budzet.domain.room.controller;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -118,6 +120,21 @@ class RoomControllerTest {
                 .andExpect(jsonPath("$.resultCode").value(200));
 
         verify(roomService).updateRoom(1L, 10L, request);
+    }
+
+    @Test
+    @DisplayName("모임 삭제 시 인증 사용자의 ID를 전달하고 공통 응답을 반환한다.")
+    void deleteRoom_usesAuthenticatedUserId() throws Exception {
+        User actor = actor(1L);
+        when(rq.getActor()).thenReturn(actor);
+
+        mockMvc.perform(delete("/rooms/{roomId}", 10L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value(200))
+                .andExpect(jsonPath("$.message").value("모임을 삭제했습니다."))
+                .andExpect(jsonPath("$.data").value(nullValue()));
+
+        verify(roomService).deleteRoom(1L, 10L);
     }
 
     private User actor(Long userId) {

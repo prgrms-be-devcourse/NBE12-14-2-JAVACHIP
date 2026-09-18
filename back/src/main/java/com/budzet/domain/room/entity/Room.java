@@ -2,6 +2,7 @@ package com.budzet.domain.room.entity;
 
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetRequest;
+import com.budzet.domain.invite.entity.Invite;
 import com.budzet.domain.budget.entity.BudgetType;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
@@ -39,14 +40,17 @@ public class Room {
     @CreatedDate
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "room")
+    @OneToMany(mappedBy = "room", cascade = CascadeType.REMOVE)
     private List<UserRoomConnection> userConnections = new ArrayList<>();
 
-    @OneToMany(mappedBy = "room")
+    @OneToMany(mappedBy = "room", cascade = CascadeType.REMOVE)
     private List<BudgetRequest> budgetRequests = new ArrayList<>();
 
-    @OneToMany(mappedBy = "room")
+    @OneToMany(mappedBy = "room", cascade = CascadeType.REMOVE)
     private List<BudgetChange> budgetChanges = new ArrayList<>();
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.REMOVE)
+    private List<Invite> invites = new ArrayList<>();
 
     private Room(String name, Long totalBudget, Currency currency) {
         this.name = name;
@@ -82,4 +86,3 @@ public class Room {
         return this;
     }
 }
-

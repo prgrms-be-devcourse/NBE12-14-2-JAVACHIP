@@ -85,4 +85,24 @@ public class RoomService {
         room.changeName(request.name());
         return RoomDetailResponse.from(room);
     }
+
+    @Transactional
+    public void deleteRoom(Long userId, Long roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.ROOM_NOT_FOUND
+                ));
+
+        UserRoomConnection connection = userRoomConnectionRepository
+                .findByUser_IdAndRoom_Id(userId, roomId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.MEMBER_NOT_FOUND
+                ));
+
+        if (connection.getAuthority() != Authority.OWNER) {
+            throw new BusinessException(ErrorCode.OWNER_REQUIRED);
+        }
+
+        roomRepository.delete(room);
+    }
 }
