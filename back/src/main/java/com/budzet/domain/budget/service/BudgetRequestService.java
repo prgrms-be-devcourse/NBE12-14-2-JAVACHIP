@@ -1,5 +1,6 @@
 package com.budzet.domain.budget.service;
 
+import com.budzet.domain.budget.dto.BudgetRequestListResponse;
 import com.budzet.domain.budget.entity.BudgetRequest;
 import com.budzet.domain.budget.repository.BudgetRequestRepository;
 import com.budzet.domain.room.entity.Room;
@@ -11,6 +12,8 @@ import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,15 @@ public class BudgetRequestService {
             throw new BusinessException(ErrorCode.REQUEST_AMOUNT_OVER_BUDGET);
 
         budgetRequestRepository.save(new BudgetRequest(room, user, reason, requestedAmount));
+    }
+
+    public List<BudgetRequestListResponse> getBudgetRequestList(Long roomId, User user){
+        //유저 방 소속여부 처리
+        boolean isUserJoinRoom = userRoomConnectionRepository.existsById(new UserRoomConnectionId(user.getId(), roomId));
+        if(!isUserJoinRoom)
+            throw new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM);
+
+        return budgetRequestRepository.findDtoByRoomId(roomId);
     }
 
 }
