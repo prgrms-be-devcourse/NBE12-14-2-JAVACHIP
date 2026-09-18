@@ -2,15 +2,20 @@ package com.budzet.domain.budget.service;
 
 import com.budzet.domain.budget.dto.BudgetHistoryResponse;
 import com.budzet.domain.budget.dto.BudgetResponse;
+import com.budzet.domain.budget.dto.BudgetUpdateRequest;
+import com.budzet.domain.budget.dto.BudgetUpdateResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetType;
 import com.budzet.domain.budget.repository.BudgetChangeRepository;
+import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.Currency;
 import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.repository.RoomRepository;
 import com.budzet.domain.room.repository.UserRoomConnectionRepository;
+import com.budzet.domain.user.entity.User;
 import com.budzet.global.exception.BusinessException;
+import com.budzet.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,8 +29,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class BudgetServiceTest {
@@ -263,5 +267,147 @@ public class BudgetServiceTest {
         );
 
         assertEquals("사용자가 방에 속해있지 않습니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("예산 수정 성공 - OWNER 권한으로 증액")
+    void updateBudget_success_owner() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+        BudgetUpdateRequest request = new BudgetUpdateRequest(5000L, BudgetType.INCREASE, "지원금 추가");
+
+        User user = mock(User.class);
+        UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
+        Room room = mock(Room.class);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.of(userRoomConnection));
+        when(userRoomConnection.getAuthority()).thenReturn(Authority.OWNER);
+        when(userRoomConnection.getUser()).thenReturn(user);
+
+        when(roomRepository.findByWithLock(roomId))
+                .thenReturn(Optional.of(room));
+        when(room.getId()).thenReturn(roomId);
+        when(room.getTotalBudget()).thenReturn(15000L);
+
+        // when
+        BudgetUpdateResponse response = budgetService.updateBudget(roomId, userId, request);
+
+        // then
+        assertNotNull(response);
+        assertEquals(roomId, response.roomId());
+        assertEquals(15000L, response.totalBudget());
+
+        // 예산 연산 메서드가 호출되었는지 및 이력이 DB에 저장되었는지 검증
+        verify(room).updateTotalBudget(5000L, BudgetType.INCREASE);
+        verify(budgetChangeRepository, times(1)).save(any(BudgetChange.class));
+    }
+
+    @Test
+    @DisplayName("예산 수정 성공 - OPERATOR 권한으로 차감")
+    void updateBudget_success_operator() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+        BudgetUpdateRequest request = new BudgetUpdateRequest(2000L, BudgetType.DECREASE, "비품 구매");
+
+        User user = mock(User.class);
+        UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
+        Room room = mock(Room.class);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.of(userRoomConnection));
+        when(userRoomConnection.getAuthority()).thenReturn(Authority.OPERATOR);
+        when(userRoomConnection.getUser()).thenReturn(user);
+
+        when(roomRepository.findByWithLock(roomId))
+                .thenReturn(Optional.of(room));
+        when(room.getId()).thenReturn(roomId);
+        when(room.getTotalBudget()).thenReturn(8000L);
+
+        // when
+        BudgetUpdateResponse response = budgetService.updateBudget(roomId, userId, request);
+
+        // then
+        assertNotNull(response);
+        verify(room).updateTotalBudget(2000L, BudgetType.DECREASE);
+        verify(budgetChangeRepository, times(1)).save(any(BudgetChange.class));
+    }
+
+    @Test
+    @DisplayName("예산 수정 실패 - 권한 없음 (일반 MEMBER)")
+    void updateBudget_forbiddenAccess() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+        BudgetUpdateRequest request = new BudgetUpdateRequest(1000L, BudgetType.INCREASE, "시도");
+
+        UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.of(userRoomConnection));
+        when(userRoomConnection.getAuthority()).thenReturn(Authority.MEMBER); // 일반 회원 권한
+
+        // when & then
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> budgetService.updateBudget(roomId, userId, request)
+        );
+
+        // 락 조회 및 저장 메서드가 실행되지 않아야 함
+        verify(roomRepository, never()).findByWithLock(any());
+        verify(budgetChangeRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("예산 수정 실패 - 방을 찾을 수 없음")
+    void updateBudget_roomNotFound() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+        BudgetUpdateRequest request = new BudgetUpdateRequest(1000L, BudgetType.INCREASE, "시도");
+
+        UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.of(userRoomConnection));
+        when(userRoomConnection.getAuthority()).thenReturn(Authority.OWNER);
+
+        when(roomRepository.findByWithLock(roomId))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(BusinessException.class, () -> budgetService.updateBudget(roomId, userId, request));
+        verify(budgetChangeRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("예산 수정 실패 - 가용예산 부족으로 차감 예외 발생 시 이력이 저장되지 않음")
+    void updateBudget_exceedAvailableBudget() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+        BudgetUpdateRequest request = new BudgetUpdateRequest(50000L, BudgetType.DECREASE, "과도한 차감");
+
+        UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
+        Room room = mock(Room.class);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.of(userRoomConnection));
+        when(userRoomConnection.getAuthority()).thenReturn(Authority.OWNER);
+
+        when(roomRepository.findByWithLock(roomId))
+                .thenReturn(Optional.of(room));
+
+        // Room 엔티티 예산 차감 시 예외 발생하도록 처리
+        doThrow(new BusinessException(ErrorCode.BAD_REQUEST, "가용예산이 부족합니다."))
+                .when(room).updateTotalBudget(50000L, BudgetType.DECREASE);
+
+        // when & then
+        assertThrows(BusinessException.class, () -> budgetService.updateBudget(roomId, userId, request));
+
+        // 예외가 발생했으므로 이력 저장은 진행되지 않음
+        verify(budgetChangeRepository, never()).save(any());
     }
 }

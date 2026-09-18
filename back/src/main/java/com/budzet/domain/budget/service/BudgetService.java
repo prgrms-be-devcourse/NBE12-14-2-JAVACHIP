@@ -2,8 +2,11 @@ package com.budzet.domain.budget.service;
 
 import com.budzet.domain.budget.dto.BudgetHistoryResponse;
 import com.budzet.domain.budget.dto.BudgetResponse;
+import com.budzet.domain.budget.dto.BudgetUpdateRequest;
+import com.budzet.domain.budget.dto.BudgetUpdateResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.repository.BudgetChangeRepository;
+import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.repository.RoomRepository;
@@ -44,11 +47,35 @@ public class BudgetService {
         return BudgetHistoryResponse.from(budgetChanges);
     }
 
+    @Transactional
+    public BudgetUpdateResponse updateBudget(
+            Long roomId, Long userId,
+            BudgetUpdateRequest budgetUpdateRequest){
+
+        UserRoomConnection userRoomConnection = validateRoomMember(roomId,userId);
+        if(!(userRoomConnection.getAuthority().equals(Authority.OWNER)
+        || userRoomConnection.getAuthority().equals(Authority.OPERATOR))){
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
+        Room room = findByRoomIdWithLock(roomId);
+
+        room.updateTotalBudget(budgetUpdateRequest.totalBudget(),
+                budgetUpdateRequest.budgetType());
+        BudgetChange budgetChange = new BudgetChange(room, userRoomConnection.getUser(), budgetUpdateRequest);
+        budgetChangeRepository.save(budgetChange);
+
+        return BudgetUpdateResponse.from(room);
+    }
 
 
     private Room findByRoomId(Long roomId){
-
         return roomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+    }
+
+    private Room findByRoomIdWithLock(Long roomId){
+
+        return roomRepository.findByWithLock(roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
     }
 
