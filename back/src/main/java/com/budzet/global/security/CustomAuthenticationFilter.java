@@ -29,22 +29,46 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final UserService userService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException{
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return List.of("/users/join", "/users/login")
+                .contains(request.getRequestURI());
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         logger.debug("CustomAuthenticationFilter called");
 
+        try {
+            authenticate(request, response, filterChain);
+        } catch (BusinessException e) {
+            ErrorCode errorCode = e.getErrorCode();
+            response.setContentType("application/json; charset=UTF-8");
+            response.setStatus(errorCode.getStatus().value());
+            response.getWriter().write(
+                    """
+                            {
+                                "resultCode": "%s",
+                                "message": "%s"
+                            }
+                            """.formatted(errorCode.getStatus().value(), errorCode.getMessage())
+            );
+        }
+    }
+
+    private void authenticate(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String headerAuthorization = rq.getHeader("Authorization", "");
 
         String accessToken = null;
 
-        if(!headerAuthorization.isBlank()){
+        if (!headerAuthorization.isBlank()) {
 
-            if(!headerAuthorization.startsWith("Bearer ")){
+            if (!headerAuthorization.startsWith("Bearer ")) {
                 throw new BusinessException(ErrorCode.INVALID_ACCESS_TOKEN);
             }
 
             accessToken = headerAuthorization.substring(7);
 
-        } else{
+        } else {
             accessToken = rq.getCookieValue("accessToken", "");
         }
 
@@ -63,7 +87,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
         Long id = ((Number) payload.get("id")).longValue();
 
-        User user =  userService.findById(id)
+        User user = userService.findById(id)
                 .orElseThrow(
                         () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
                 );
