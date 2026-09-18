@@ -1,5 +1,6 @@
 package com.budzet.domain.budget.entity;
 
+import com.budzet.domain.budget.dto.BudgetUpdateRequest;
 import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -48,4 +49,14 @@ public class BudgetChange {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id", unique = true)
     private BudgetRequest request;
+
+    public BudgetChange(Room room, User user, BudgetUpdateRequest budgetUpdateRequest){
+        this.room = room;
+        this.user = user;
+        this.userName = user.getName();
+        this.type = budgetUpdateRequest.budgetType();
+        this.reason = budgetUpdateRequest.changeReason();
+        this.changeBudget = budgetUpdateRequest.totalBudget();
+        this.changedBudget = budgetUpdateRequest.totalBudget();
+    }
 }
