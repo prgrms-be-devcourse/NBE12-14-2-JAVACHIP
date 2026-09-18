@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 
 import com.budzet.domain.room.dto.RoomCreateRequest;
 import com.budzet.domain.room.dto.RoomCreateResponse;
@@ -261,5 +262,81 @@ class RoomServiceTest {
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
         assertThat(exception.getMessage()).isEqualTo("멤버를 찾을 수 없습니다.");
         assertThat(room.getName()).isEqualTo("기존 이름");
+    }
+
+    @Test
+    @DisplayName("모임장은 모임을 삭제할 수 있다.")
+    void deleteRoom_deletesRoomWhenUserIsOwner() {
+        Long userId = 1L;
+        Long roomId = 10L;
+        Room room = Room.create("사진동아리", 100_000L, Currency.KRW);
+        UserRoomConnection connection = mock(UserRoomConnection.class);
+
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.of(connection));
+        when(connection.getAuthority()).thenReturn(Authority.OWNER);
+
+        roomService.deleteRoom(userId, roomId);
+
+        verify(roomRepository).delete(room);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 모임 삭제 시, 에러 발생")
+    void deleteRoom_throwsNotFoundExceptionWhenRoomDoesNotExist() {
+        Long userId = 1L;
+        Long roomId = 10L;
+        when(roomRepository.findById(roomId)).thenReturn(Optional.empty());
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> roomService.deleteRoom(userId, roomId)
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ROOM_NOT_FOUND);
+        verify(roomRepository, never()).delete(any(Room.class));
+    }
+
+    @Test
+    @DisplayName("모임 연결 정보가 없으면 모임 삭제 시, 에러 발생")
+    void deleteRoom_throwsNotFoundExceptionWhenUserHasNoRoomConnection() {
+        Long userId = 1L;
+        Long roomId = 10L;
+        Room room = Room.create("사진동아리", 100_000L, Currency.KRW);
+
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.empty());
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> roomService.deleteRoom(userId, roomId)
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
+        verify(roomRepository, never()).delete(any(Room.class));
+    }
+
+    @Test
+    @DisplayName("모임원은 모임을 삭제할 수 없다.")
+    void deleteRoom_throwsForbiddenExceptionWhenUserIsNotOwner() {
+        Long userId = 1L;
+        Long roomId = 10L;
+        Room room = Room.create("사진동아리", 100_000L, Currency.KRW);
+        UserRoomConnection connection = mock(UserRoomConnection.class);
+
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.of(connection));
+        when(connection.getAuthority()).thenReturn(Authority.MEMBER);
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> roomService.deleteRoom(userId, roomId)
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.OWNER_REQUIRED);
+        verify(roomRepository, never()).delete(any(Room.class));
     }
 }
