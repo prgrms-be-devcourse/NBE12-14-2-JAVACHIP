@@ -74,7 +74,7 @@ public class Room {
         }else if(type == BudgetType.DECREASE || type == BudgetType.SETTLEMENT){
 
             if(availableBudget < changedBudget){
-                throw new BusinessException(ErrorCode.BAD_REQUEST,"가용예산을 초과하여 차감할 수 없습니다.");
+                throw new BusinessException(ErrorCode.BUDGET_EXCEEDED);
             }
             this.totalBudget = this.totalBudget - changedBudget;
             this.availableBudget = this.availableBudget - changedBudget;

@@ -11,6 +11,7 @@ import com.budzet.global.rq.Rq;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -22,13 +23,13 @@ public class BudgetController {
     private final Rq rq;
 
     @GetMapping("/{roomId}/budget")
-    public ApiResponse<BudgetResponse> getBudget(
+    public ResponseEntity<ApiResponse<BudgetResponse>> getBudget(
             @PathVariable Long roomId){
 
         User user = rq.getActor();
 
         BudgetResponse budgetResponse = budgetService.getBudget(roomId,user.getId());
-        return ApiResponse.success(
+        return ApiResponse.response(
                 HttpStatus.OK,
                 "예산 조회에 성공하였습니다.",
                 budgetResponse);
@@ -36,21 +37,21 @@ public class BudgetController {
 
 
     @GetMapping("/{roomId}/budget/history")
-    public ApiResponse<BudgetHistoryResponse> getBudgetHistory(
+    public ResponseEntity<ApiResponse<BudgetHistoryResponse>> getBudgetHistory(
             @PathVariable Long roomId
     ){
 
         User user = rq.getActor();
 
         BudgetHistoryResponse budgetHistoryResponse = budgetService.getBudgetHistory(roomId, user.getId());
-        return ApiResponse.success(
+        return ApiResponse.response(
                 HttpStatus.OK,
                 "예산 변동 목록 조회에 성공하였습니다.",
                 budgetHistoryResponse);
     }
 
     @PatchMapping("/{roomId}/budget")
-    public ApiResponse<BudgetUpdateResponse> updateBudget(
+    public ResponseEntity<ApiResponse<BudgetUpdateResponse>> updateBudget(
             @PathVariable Long roomId,
             @RequestBody @Valid BudgetUpdateRequest budgetUpdateRequest
             ){
@@ -61,7 +62,7 @@ public class BudgetController {
                 roomId,user.getId(),
                 budgetUpdateRequest);
 
-        return ApiResponse.success(
+        return ApiResponse.response(
                 HttpStatus.OK,
                 "예산 수정에 성공하였습니다.",
                 budgetUpdateResponse);
