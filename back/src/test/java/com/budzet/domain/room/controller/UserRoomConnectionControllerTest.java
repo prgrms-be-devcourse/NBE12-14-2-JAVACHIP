@@ -4,104 +4,155 @@ import com.budzet.domain.room.dto.MemberResponse;
 import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.service.UserRoomConnectionService;
-import com.budzet.global.api.ApiResponse;
-import org.junit.jupiter.api.DisplayName;
+import com.budzet.domain.user.entity.User;
+import com.budzet.global.rq.Rq;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 class UserRoomConnectionControllerTest {
 
+    private UserRoomConnectionService service;
+    private Rq rq;
+    private UserRoomConnectionController controller;
+
+    @BeforeEach
+    void setUp() {
+        service = mock(UserRoomConnectionService.class);
+        rq = mock(Rq.class);
+
+        controller = new UserRoomConnectionController(service, rq);
+    }
+
     @Test
-    @DisplayName("멤버 권한 조회 성공")
-    void getAuthority_success() {
-
-        UserRoomConnectionService service =
-                mock(UserRoomConnectionService.class);
-
-        UserRoomConnectionController controller =
-                new UserRoomConnectionController(service);
+    void 멤버_권한_조회() {
+        // given
+        Long roomId = 1L;
+        Long userId = 2L;
 
         UserRoomConnection connection =
                 mock(UserRoomConnection.class);
 
+        when(service.getConnection(roomId, userId))
+                .thenReturn(connection);
+
         when(connection.getAuthority())
                 .thenReturn(Authority.MEMBER);
 
-        when(service.getConnection(1L, 2L))
-                .thenReturn(connection);
+        // when
+        var response =
+                controller.getAuthority(roomId, userId);
 
-        ApiResponse<String> response =
-                controller.getAuthority(1L, 2L);
+        // then
+        assertThat(response.resultCode())
+                .isEqualTo(200);
 
-        assertEquals(200, response.resultCode());
-        assertEquals("멤버 권한 조회 성공", response.message());
-        assertEquals("MEMBER", response.data());
-    }
+        assertThat(response.message())
+                .isEqualTo("멤버 권한 조회 성공");
 
-    @Test
-    @DisplayName("모임 멤버 목록 조회 성공")
-    void getMembers_success() {
-
-        UserRoomConnectionService service =
-                mock(UserRoomConnectionService.class);
-
-        UserRoomConnectionController controller =
-                new UserRoomConnectionController(service);
-
-        List<MemberResponse> members = List.of(
-                new MemberResponse(1L, "홍길동", Authority.OWNER),
-                new MemberResponse(2L, "김철수", Authority.MEMBER)
-        );
-
-        when(service.getMembers(1L))
-                .thenReturn(members);
-
-        ApiResponse<List<MemberResponse>> response =
-                controller.getMembers(1L);
-
-        assertEquals(200, response.resultCode());
-        assertEquals("멤버 목록 조회 성공", response.message());
-        assertEquals(2, response.data().size());
-        assertEquals("홍길동", response.data().get(0).name());
-        assertEquals(Authority.OWNER, response.data().get(0).authority());
-    }
-
-    @Test
-    @DisplayName("멤버 강퇴 성공")
-    void kickMember_success() {
-
-        UserRoomConnectionService service =
-                mock(UserRoomConnectionService.class);
-
-        UserRoomConnectionController controller =
-                new UserRoomConnectionController(service);
-
-        controller.kickMember(1L, 2L);
+        assertThat(response.data())
+                .isEqualTo("MEMBER");
 
         verify(service)
-                .kickMember(1L, 2L);
+                .getConnection(roomId, userId);
     }
 
     @Test
-    @DisplayName("모임 탈퇴 성공")
-    void leaveRoom_success() {
+    void 멤버_목록_조회() {
+        // given
+        Long roomId = 1L;
 
-        UserRoomConnectionService service =
-                mock(UserRoomConnectionService.class);
+        MemberResponse member1 =
+                mock(MemberResponse.class);
 
-        UserRoomConnectionController controller =
-                new UserRoomConnectionController(service);
+        MemberResponse member2 =
+                mock(MemberResponse.class);
 
-        controller.leaveRoom(1L);
+        when(service.getMembers(roomId))
+                .thenReturn(List.of(member1, member2));
+
+        // when
+        var response =
+                controller.getMembers(roomId);
+
+        // then
+        assertThat(response.resultCode())
+                .isEqualTo(200);
+
+        assertThat(response.message())
+                .isEqualTo("멤버 목록 조회 성공");
+
+        assertThat(response.data())
+                .hasSize(2);
 
         verify(service)
-                .leaveRoom(1L, 2L);
+                .getMembers(roomId);
+    }
+
+    @Test
+    void 멤버_강퇴() {
+        // given
+        Long roomId = 1L;
+        Long userId = 2L;
+
+        // when
+        var response =
+                controller.kickMember(roomId, userId);
+
+        // then
+        assertThat(response.resultCode())
+                .isEqualTo(200);
+
+        assertThat(response.message())
+                .isEqualTo("멤버 강퇴 성공");
+
+        assertThat(response.data())
+                .isNull();
+
+        verify(service)
+                .kickMember(roomId, userId);
+    }
+
+    @Test
+    void 모임_탈퇴() {
+        // given
+        Long roomId = 1L;
+        Long userId = 2L;
+
+        User user = mock(User.class);
+
+        when(rq.getActor())
+                .thenReturn(user);
+
+        when(user.getId())
+                .thenReturn(userId);
+
+        // when
+        var response =
+                controller.leaveRoom(roomId);
+
+        // then
+        assertThat(response.resultCode())
+                .isEqualTo(200);
+
+        assertThat(response.message())
+                .isEqualTo("모임 탈퇴 성공");
+
+        assertThat(response.data())
+                .isNull();
+
+        verify(rq)
+                .getActor();
+
+        verify(user)
+                .getId();
+
+        verify(service)
+                .leaveRoom(roomId, userId);
     }
 
 
