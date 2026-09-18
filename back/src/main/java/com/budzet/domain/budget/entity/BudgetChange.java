@@ -31,8 +31,9 @@ public class BudgetChange {
     @Column(length = 50)
     private String userName;
 
-    @Column(length = 20)
-    private String type;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private BudgetType type;
 
     @Column(length = 20)
     private String reason;
