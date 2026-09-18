@@ -6,6 +6,7 @@ import com.budzet.global.api.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import com.budzet.global.rq.Rq;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ import java.util.List;
 public class UserRoomConnectionController {
 
     private final UserRoomConnectionService userRoomConnectionService;
+    private final Rq rq;
 
     @GetMapping("/{roomId}/members/{userId}/authority")
     public ApiResponse<String> getAuthority(
@@ -66,7 +68,7 @@ public class UserRoomConnectionController {
             @PathVariable Long roomId
     ) {
         //userID 임시 설정 -> 로그인 구현 후 userId 삽입
-        userRoomConnectionService.leaveRoom(roomId, 2L);
+        userRoomConnectionService.leaveRoom(roomId, rq.getActor().getId());
 
         return ApiResponse.success(
                 HttpStatus.OK,

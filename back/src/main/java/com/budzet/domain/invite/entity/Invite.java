@@ -26,4 +26,10 @@ public class Invite {
     private LocalDateTime createdAt;
 
     private LocalDateTime expireAt;
+
+    public Invite(String code, Room room, LocalDateTime expireAt) {
+        this.code = code;
+        this.room = room;
+        this.expireAt = expireAt;
+    }
 }
