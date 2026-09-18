@@ -35,28 +35,24 @@ public class RoomController {
     ) {
         Long userId = rq.getActor().getId();
         RoomCreateResponse response = roomService.createRoom(userId, request);
-        ApiResponse<RoomCreateResponse> apiResponse = ApiResponse.success(
+
+        return ApiResponse.response(
                 HttpStatus.CREATED,
                 "모임이 생성되었습니다.",
-                response);
-
-        return ResponseEntity
-                .status(apiResponse.resultCode())
-                .body(apiResponse);
+                response
+        );
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<RoomListResponse>> getRooms() {
         Long userId = rq.getActor().getId();
         RoomListResponse response = roomService.getRooms(userId);
-        ApiResponse<RoomListResponse> apiResponse = ApiResponse.success(
+
+        return ApiResponse.response(
                 HttpStatus.OK,
                 "모임 목록을 조회했습니다.",
-                response);
-
-        return ResponseEntity
-                .status(apiResponse.resultCode())
-                .body(apiResponse);
+                response
+        );
     }
 
     @GetMapping("/{roomId}")
@@ -65,14 +61,12 @@ public class RoomController {
     ) {
         Long userId = rq.getActor().getId();
         RoomDetailResponse response = roomService.getRoom(userId, roomId);
-        ApiResponse<RoomDetailResponse> apiResponse = ApiResponse.success(
+
+        return ApiResponse.response(
                 HttpStatus.OK,
                 "모임을 조회했습니다.",
-                response);
-
-        return ResponseEntity
-                .status(apiResponse.resultCode())
-                .body(apiResponse);
+                response
+        );
     }
 
     @PatchMapping("/{roomId}")
@@ -82,14 +76,12 @@ public class RoomController {
     ) {
         Long userId = rq.getActor().getId();
         RoomDetailResponse response = roomService.updateRoom(userId, roomId, request);
-        ApiResponse<RoomDetailResponse> apiResponse = ApiResponse.success(
+
+        return ApiResponse.response(
                 HttpStatus.OK,
                 "모임이 수정되었습니다.",
-                response);
-
-        return ResponseEntity
-                .status(apiResponse.resultCode())
-                .body(apiResponse);
+                response
+        );
     }
 
     @DeleteMapping("/{roomId}")
@@ -98,13 +90,11 @@ public class RoomController {
     ) {
         Long userId = rq.getActor().getId();
         roomService.deleteRoom(userId, roomId);
-        ApiResponse<Void> apiResponse = ApiResponse.success(
+
+        return ApiResponse.response(
                 HttpStatus.OK,
                 "모임을 삭제했습니다.",
-                null);
-
-        return ResponseEntity
-                .status(apiResponse.resultCode())
-                .body(apiResponse);
+                null
+        );
     }
 }
