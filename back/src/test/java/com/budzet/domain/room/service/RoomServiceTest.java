@@ -160,7 +160,7 @@ class RoomServiceTest {
         verify(roomRepository).findJoinedRoomByIdAndUserId(roomId, userId);
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ROOM_NOT_FOUND);
-        assertThat(exception.getMessage()).isEqualTo("모임을 찾을 수 없습니다.");
+        assertThat(exception.getMessage()).isEqualTo("해당 모임이 존재하지 않습니다.");
     }
 
     @Test
@@ -235,7 +235,7 @@ class RoomServiceTest {
         );
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ROOM_NOT_FOUND);
-        assertThat(exception.getMessage()).isEqualTo("모임을 찾을 수 없습니다.");
+        assertThat(exception.getMessage()).isEqualTo("해당 모임이 존재하지 않습니다.");
     }
 
     @Test
