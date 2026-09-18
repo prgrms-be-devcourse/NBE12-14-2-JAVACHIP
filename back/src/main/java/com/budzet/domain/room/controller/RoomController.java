@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -85,6 +86,22 @@ public class RoomController {
                 HttpStatus.OK,
                 "모임이 수정되었습니다.",
                 response);
+
+        return ResponseEntity
+                .status(apiResponse.resultCode())
+                .body(apiResponse);
+    }
+
+    @DeleteMapping("/{roomId}")
+    public ResponseEntity<ApiResponse<Void>> deleteRoom(
+            @PathVariable Long roomId
+    ) {
+        Long userId = rq.getActor().getId();
+        roomService.deleteRoom(userId, roomId);
+        ApiResponse<Void> apiResponse = ApiResponse.success(
+                HttpStatus.OK,
+                "모임을 삭제했습니다.",
+                null);
 
         return ResponseEntity
                 .status(apiResponse.resultCode())
