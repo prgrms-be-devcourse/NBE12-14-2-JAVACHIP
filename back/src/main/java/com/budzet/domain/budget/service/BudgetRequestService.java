@@ -6,6 +6,7 @@ import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.entity.UserRoomConnectionId;
 import com.budzet.domain.room.repository.RoomRepository;
 import com.budzet.domain.room.repository.UserRoomConnectionRepository;
+import com.budzet.domain.user.entity.User;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -19,18 +20,18 @@ public class BudgetRequestService {
     private final RoomRepository roomRepository;
     private final UserRoomConnectionRepository userRoomConnectionRepository;
 
-    public void budgetRequestRegistration(Long roomId, Long userId, String reason, Long requestedAmount){
+    public void budgetRequestRegistration(Long roomId, User user, String reason, Long requestedAmount){
         //유저 방 소속여부 처리
-        boolean isUserJoinRoom = userRoomConnectionRepository.existsById(new UserRoomConnectionId(userId, roomId));
+        boolean isUserJoinRoom = userRoomConnectionRepository.existsById(new UserRoomConnectionId(user.getId(), roomId));
         if(!isUserJoinRoom)
             throw new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM);
 
         Room room = this.roomRepository.findById(roomId).get();
         //신청예산의 가용예산 초과여부 처리
         if(room.getAvailableBudget() < requestedAmount)
-            throw new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM);
+            throw new BusinessException(ErrorCode.REQUEST_AMOUNT_OVER_BUDGET);
 
-        budgetRequestRepository.save(new BudgetRequest(room, reason, requestedAmount));
+        budgetRequestRepository.save(new BudgetRequest(room, user, reason, requestedAmount));
     }
 
 }
