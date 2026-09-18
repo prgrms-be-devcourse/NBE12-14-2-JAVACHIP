@@ -2,7 +2,9 @@ package com.budzet.domain.budget.controller;
 
 import com.budzet.domain.budget.dto.BudgetRequestRequest;
 import com.budzet.domain.budget.service.BudgetRequestService;
+import com.budzet.domain.user.entity.User;
 import com.budzet.global.api.ApiResponse;
+import com.budzet.global.rq.Rq;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/rooms")
 public class BudgetRequestController {
 
+    private final Rq rq;
     private final BudgetRequestService budgetRequestService;
 
     @PostMapping("/{roomId}/budget/request")
@@ -21,8 +24,8 @@ public class BudgetRequestController {
             @PathVariable Long roomId,
             @Valid @RequestBody BudgetRequestRequest budgetRequestRequest
     ){
-        Long userIdProxy = 1L;
-        budgetRequestService.budgetRequestRegistration(roomId, userIdProxy, budgetRequestRequest.reason(), budgetRequestRequest.requested_amount());
+        User user = rq.getActor();
+        budgetRequestService.budgetRequestRegistration(roomId, user, budgetRequestRequest.reason(), budgetRequestRequest.requested_amount());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(HttpStatus.CREATED, "예산신청 등록성공", null));
