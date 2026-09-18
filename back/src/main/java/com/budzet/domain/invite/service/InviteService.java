@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -78,5 +79,18 @@ public class InviteService {
                 invite.getCode(),
                 invite.getExpireAt()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<InviteResponse> getInvites(Long roomId) {
+
+        List<Invite> invites = inviteRepository.findAllByRoom_Id(roomId);
+
+        return invites.stream()
+                .map(invite -> new InviteResponse(
+                        invite.getCode(),
+                        invite.getExpireAt()
+                ))
+                .toList();
     }
 }

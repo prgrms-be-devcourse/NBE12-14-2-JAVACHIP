@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -187,5 +188,57 @@ class InviteServiceTest {
 
         verify(inviteRepository)
                 .findById(token);
+    }
+
+    @Test
+    void getInvites() {
+        Long roomId = 1L;
+
+        Invite invite1 = mock(Invite.class);
+        Invite invite2 = mock(Invite.class);
+
+        LocalDateTime expireAt1 = LocalDateTime.now().plusHours(1);
+        LocalDateTime expireAt2 = LocalDateTime.now().plusHours(2);
+
+        when(inviteRepository.findAllByRoom_Id(roomId))
+                .thenReturn(List.of(invite1, invite2));
+
+        when(invite1.getCode()).thenReturn("ABC1234567");
+        when(invite1.getExpireAt()).thenReturn(expireAt1);
+
+        when(invite2.getCode()).thenReturn("DEF1234567");
+        when(invite2.getExpireAt()).thenReturn(expireAt2);
+
+        List<InviteResponse> result =
+                inviteService.getInvites(roomId);
+
+        assertThat(result).hasSize(2);
+
+        assertThat(result.get(0).code())
+                .isEqualTo("ABC1234567");
+        assertThat(result.get(0).expireAt())
+                .isEqualTo(expireAt1);
+
+        assertThat(result.get(1).code())
+                .isEqualTo("DEF1234567");
+        assertThat(result.get(1).expireAt())
+                .isEqualTo(expireAt2);
+
+        verify(inviteRepository).findAllByRoom_Id(roomId);
+    }
+
+    @Test
+    void getInvitesWhenEmpty() {
+        Long roomId = 1L;
+
+        when(inviteRepository.findAllByRoom_Id(roomId))
+                .thenReturn(List.of());
+
+        List<InviteResponse> result =
+                inviteService.getInvites(roomId);
+
+        assertThat(result).isEmpty();
+
+        verify(inviteRepository).findAllByRoom_Id(roomId);
     }
 }

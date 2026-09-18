@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/rooms")
@@ -28,6 +30,20 @@ public class InviteController {
         return ApiResponse.success(
                 HttpStatus.CREATED,
                 "초대 링크 생성 성공",
+                response
+        );
+    }
+
+    @GetMapping("/{roomId}/invites")
+    public ApiResponse<List<InviteResponse>> getInvites(
+            @PathVariable Long roomId
+    ) {
+        List<InviteResponse> response =
+                inviteService.getInvites(roomId);
+
+        return ApiResponse.success(
+                HttpStatus.OK,
+                "초대 링크 조회 성공",
                 response
         );
     }
