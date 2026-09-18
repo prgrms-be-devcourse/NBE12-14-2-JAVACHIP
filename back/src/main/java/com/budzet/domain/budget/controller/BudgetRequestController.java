@@ -21,6 +21,12 @@ public class BudgetRequestController {
     private final Rq rq;
     private final BudgetRequestService budgetRequestService;
 
+    /**
+     * 예산신청 등록
+     * @param roomId
+     * @param budgetRequestRequest
+     * @return data 없음
+     */
     @PostMapping("/{roomId}/budget/request")
     public ResponseEntity<ApiResponse<Object>> postBudgetRequest(
             @PathVariable Long roomId,
@@ -31,12 +37,32 @@ public class BudgetRequestController {
         return ApiResponse.response(HttpStatus.CREATED, "예산신청 등록성공", null);
     }
 
+    /**
+     * 현재방의 예산신청 목록조회
+     * @param roomId
+     * @return 예산신청 목록
+     */
     @GetMapping("/{roomId}/budget/request/list")
     public ResponseEntity<ApiResponse<List<BudgetRequestListResponse>>> getBudgetRequestList(
             @PathVariable Long roomId
     ){
         User user = rq.getActor();
         return ApiResponse.response(HttpStatus.OK, "예산신청 목록조회성공", budgetRequestService.getBudgetRequestList(roomId, user));
+    }
+
+    /**
+     * 예산신청 상세조회
+     * @param roomId
+     * @param requestId
+     * @return 예산신청 상세정보
+     */
+    @GetMapping("/{roomId}/budget/request/{requestId}")
+    public ResponseEntity<ApiResponse<BudgetRequestListResponse>> getBudgetRequest(
+            @PathVariable Long roomId,
+            @PathVariable Long requestId
+    ){
+        User user = rq.getActor();
+        return ApiResponse.response(HttpStatus.OK, "예산신청 조회성공", budgetRequestService.getBudgetRequest(roomId, user, requestId));
     }
 
 }
