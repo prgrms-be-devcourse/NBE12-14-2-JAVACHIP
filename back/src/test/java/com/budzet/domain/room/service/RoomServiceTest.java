@@ -11,9 +11,15 @@ import com.budzet.domain.room.dto.RoomCreateRequest;
 import com.budzet.domain.room.dto.RoomCreateResponse;
 import com.budzet.domain.room.dto.RoomDetailResponse;
 import com.budzet.domain.room.dto.RoomListResponse;
+import com.budzet.domain.room.dto.RoomUpdateRequest;
+import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.Currency;
 import com.budzet.domain.room.entity.Room;
+import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.repository.RoomRepository;
+import com.budzet.domain.room.repository.UserRoomConnectionRepository;
+import com.budzet.domain.user.entity.User;
+import com.budzet.domain.user.repository.UserRepository;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
@@ -27,11 +33,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.Mockito.mock;
+
 @ExtendWith(MockitoExtension.class)
 class RoomServiceTest {
 
     @Mock
     private RoomRepository roomRepository;
+
+    @Mock
+    private UserRoomConnectionRepository userRoomConnectionRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private RoomService roomService;
@@ -39,6 +53,8 @@ class RoomServiceTest {
     @Test
     @DisplayName("모임 생성 시, 설정한 초기 자금은 총/가용 예산 둘 다 반영된다.")
     void createRoom_initializesAvailableBudgetWithTotalBudget() {
+        Long userId = 1L;
+        User user = mock(User.class);
         RoomCreateRequest request = new RoomCreateRequest(
                 "한양대 사진동아리 렌즈",
                 100_000L,
@@ -46,8 +62,9 @@ class RoomServiceTest {
         );
         when(roomRepository.save(any(Room.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.getReferenceById(userId)).thenReturn(user);
 
-        RoomCreateResponse response = roomService.createRoom(request);
+        RoomCreateResponse response = roomService.createRoom(userId, request);
 
         ArgumentCaptor<Room> roomCaptor = ArgumentCaptor.forClass(Room.class);
         verify(roomRepository).save(roomCaptor.capture());
@@ -59,6 +76,17 @@ class RoomServiceTest {
         assertThat(savedRoom.getAvailableBudget()).isEqualTo(100_000L);
         assertThat(savedRoom.getCurrency()).isEqualTo(Currency.KRW);
         assertThat(response.availableBudget()).isEqualTo(100_000L);
+
+        ArgumentCaptor<UserRoomConnection> connectionCaptor =
+                ArgumentCaptor.forClass(UserRoomConnection.class);
+        verify(userRoomConnectionRepository).save(connectionCaptor.capture());
+
+        UserRoomConnection ownerConnection = connectionCaptor.getValue();
+        verify(userRepository).getReferenceById(userId);
+        assertThat(ownerConnection.getUser()).isSameAs(user);
+        assertThat(ownerConnection.getRoom()).isSameAs(savedRoom);
+        assertThat(ownerConnection.getAuthority()).isEqualTo(Authority.OWNER);
+        assertThat(ownerConnection.isJoined()).isTrue();
     }
 
     @Test
@@ -131,7 +159,107 @@ class RoomServiceTest {
 
         verify(roomRepository).findJoinedRoomByIdAndUserId(roomId, userId);
 
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
-        assertThat(exception.getMessage()).isEqualTo("존재하지 않는 모임입니다.");
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ROOM_NOT_FOUND);
+        assertThat(exception.getMessage()).isEqualTo("해당 모임이 존재하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("모임장은 모임 이름을 수정할 수 있다.")
+    void updateRoom_updatesNameWhenUserIsOwner() {
+        Long userId = 1L;
+        Long roomId = 10L;
+        Room room = Room.create("기존 이름", 100_000L, Currency.KRW);
+        UserRoomConnection connection = mock(UserRoomConnection.class);
+
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.of(connection));
+        when(connection.getAuthority()).thenReturn(Authority.OWNER);
+
+        RoomDetailResponse response = roomService.updateRoom(
+                userId,
+                roomId,
+                new RoomUpdateRequest("수정된 이름")
+        );
+
+        verify(roomRepository).findById(roomId);
+        verify(userRoomConnectionRepository).findByUser_IdAndRoom_Id(userId, roomId);
+        assertThat(room.getName()).isEqualTo("수정된 이름");
+        assertThat(response.name()).isEqualTo("수정된 이름");
+        assertThat(response.totalBudget()).isEqualTo(100_000L);
+        assertThat(response.availableBudget()).isEqualTo(100_000L);
+        assertThat(response.currency()).isEqualTo("KRW");
+    }
+
+    @Test
+    @DisplayName("모임원이 모임 이름을 수정하면, 에러 발생")
+    void updateRoom_throwsForbiddenExceptionWhenUserIsNotOwner() {
+        Long userId = 1L;
+        Long roomId = 10L;
+        Room room = Room.create("기존 이름", 100_000L, Currency.KRW);
+        UserRoomConnection connection = mock(UserRoomConnection.class);
+
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.of(connection));
+        when(connection.getAuthority()).thenReturn(Authority.MEMBER);
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> roomService.updateRoom(
+                        userId,
+                        roomId,
+                        new RoomUpdateRequest("수정된 이름")
+                )
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.OWNER_REQUIRED);
+        assertThat(exception.getMessage()).isEqualTo("권한이 없습니다.");
+        assertThat(room.getName()).isEqualTo("기존 이름");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 모임 수정 시, 에러 발생")
+    void updateRoom_throwsNotFoundExceptionWhenRoomDoesNotExist() {
+        Long userId = 1L;
+        Long roomId = 10L;
+        when(roomRepository.findById(roomId)).thenReturn(Optional.empty());
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> roomService.updateRoom(
+                        userId,
+                        roomId,
+                        new RoomUpdateRequest("수정된 이름")
+                )
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ROOM_NOT_FOUND);
+        assertThat(exception.getMessage()).isEqualTo("해당 모임이 존재하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("모임 연결 정보가 없으면 모임 수정 시, 에러 발생")
+    void updateRoom_throwsNotFoundExceptionWhenUserHasNoRoomConnection() {
+        Long userId = 1L;
+        Long roomId = 10L;
+        Room room = Room.create("기존 이름", 100_000L, Currency.KRW);
+
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.empty());
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> roomService.updateRoom(
+                        userId,
+                        roomId,
+                        new RoomUpdateRequest("수정된 이름")
+                )
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
+        assertThat(exception.getMessage()).isEqualTo("멤버를 찾을 수 없습니다.");
+        assertThat(room.getName()).isEqualTo("기존 이름");
     }
 }
