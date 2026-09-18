@@ -14,7 +14,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             FROM Room room
             JOIN room.userConnections connection
             WHERE connection.user.id = :userId
-              AND connection.joined = true
             ORDER BY room.createdAt DESC
             """)
     List<Room> findAllJoinedRoomsByUserId(@Param("userId") Long userId);

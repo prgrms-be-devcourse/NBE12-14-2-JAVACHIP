@@ -34,4 +34,15 @@ public class UserRoomConnection {
 
     @CreatedDate
     private LocalDateTime createdAt;
+
+    private UserRoomConnection(User user, Room room, Authority authority, boolean joined) {
+        this.user = user;
+        this.room = room;
+        this.authority = authority;
+        this.joined = joined;
+    }
+
+    public static UserRoomConnection createOwner(User user, Room room) {
+        return new UserRoomConnection(user, room, Authority.OWNER, true);
+    }
 }

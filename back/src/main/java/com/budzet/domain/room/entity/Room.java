@@ -55,4 +55,8 @@ public class Room {
     public static Room create(String name, Long totalBudget, Currency currency) {
         return new Room(name, totalBudget, currency);
     }
+
+    public void changeName(String name) {
+        this.name = name;
+    }
 }

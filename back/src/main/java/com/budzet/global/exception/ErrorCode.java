@@ -14,6 +14,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."),
     CONFLICT(HttpStatus.CONFLICT, "요청이 현재 상태와 충돌합니다."),
     USER_NOT_JOINED_ROOM(HttpStatus.FORBIDDEN, "사용자가 방에 속해있지 않습니다."),
+    OWNER_REQUIRED(HttpStatus.FORBIDDEN, "권한이 없습니다."),
     REQUEST_AMOUNT_OVER_BUDGET(HttpStatus.BAD_REQUEST, "신청예산이 가용예산을 초과했습니다."),
     USER_CONFLICT(HttpStatus.CONFLICT, "이미 존재하는 회원입니다."),
     BUDGET_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 모임에 등록된 예산 정보가 없습니다."),
