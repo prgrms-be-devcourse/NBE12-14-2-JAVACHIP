@@ -2,6 +2,8 @@ package com.budzet.domain.budget.controller;
 
 import com.budzet.domain.budget.dto.BudgetHistoryResponse;
 import com.budzet.domain.budget.dto.BudgetResponse;
+import com.budzet.domain.budget.dto.BudgetUpdateRequest;
+import com.budzet.domain.budget.dto.BudgetUpdateResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetType;
 import com.budzet.domain.budget.service.BudgetService;
@@ -19,13 +21,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,6 +41,9 @@ public class BudgetControllerTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockitoBean
     private BudgetService budgetService;
@@ -109,5 +118,60 @@ public class BudgetControllerTest {
                 .andExpect(jsonPath("$.data.history[0].type").value("SETTLEMENT"))
                 .andExpect(jsonPath("$.data.history[0].reason").value("장비대여"))
                 .andExpect(jsonPath("$.data.history[0].reason").exists());
+    }
+
+    @Test
+    @DisplayName("예산 수정 성공")
+    void updateBudget_success() throws Exception {
+
+        // given
+        Long roomId = 1L;
+        BudgetUpdateRequest request = new BudgetUpdateRequest(5000L, BudgetType.INCREASE, "지원금 추가");
+        BudgetUpdateResponse response = new BudgetUpdateResponse(roomId, 15000L);
+
+        given(budgetService.updateBudget(eq(roomId), eq(testUserId), any(BudgetUpdateRequest.class)))
+                .willReturn(response);
+
+        // when & then
+        mvc.perform(patch("/rooms/{roomId}/budget", roomId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value(200))
+                .andExpect(jsonPath("$.message").value("예산 수정에 성공하였습니다."))
+                .andExpect(jsonPath("$.data.roomId").value(1L))
+                .andExpect(jsonPath("$.data.totalBudget").value(15000L));
+    }
+
+    @Test
+    @DisplayName("예산 수정 실패 - 금액이 0원 이하일 때 Validation 예외 발생")
+    void updateBudget_validationError_invalidAmount() throws Exception {
+
+        // given
+        Long roomId = 1L;
+        // @Positive 조건 위반 (0 이하 금액)
+        BudgetUpdateRequest invalidRequest = new BudgetUpdateRequest(-1000L, BudgetType.INCREASE, "잘못된 금액");
+
+        // when & then
+        mvc.perform(patch("/rooms/{roomId}/budget", roomId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest()); // 400 Bad Request 검증
+    }
+
+    @Test
+    @DisplayName("예산 수정 실패 - 변동 유형(BudgetType)이 Null일 때 Validation 예외 발생")
+    void updateBudget_validationError_nullType() throws Exception {
+
+        // given
+        Long roomId = 1L;
+        // @NotNull 조건 위반 (BudgetType null)
+        BudgetUpdateRequest invalidRequest = new BudgetUpdateRequest(1000L, null, "타입 없음");
+
+        // when & then
+        mvc.perform(patch("/rooms/{roomId}/budget", roomId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest()); // 400 Bad Request 검증
     }
 }
