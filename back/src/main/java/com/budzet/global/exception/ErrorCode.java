@@ -19,6 +19,7 @@ public enum ErrorCode {
     USER_CONFLICT(HttpStatus.CONFLICT, "이미 존재하는 회원입니다."),
     BUDGET_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 모임에 등록된 예산 정보가 없습니다."),
     ROOM_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 모임이 존재하지 않습니다."),
+    FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN,"해당 요청에 대한 권한이 없습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
 
     private final HttpStatus status;

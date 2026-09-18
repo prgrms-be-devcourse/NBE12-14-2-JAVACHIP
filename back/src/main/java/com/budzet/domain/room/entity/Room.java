@@ -2,6 +2,9 @@ package com.budzet.domain.room.entity;
 
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetRequest;
+import com.budzet.domain.budget.entity.BudgetType;
+import com.budzet.global.exception.BusinessException;
+import com.budzet.global.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -59,4 +62,24 @@ public class Room {
     public void changeName(String name) {
         this.name = name;
     }
+
+    public Room updateTotalBudget(Long changedBudget, BudgetType type) {
+        if(changedBudget == null || changedBudget <= 0 ){
+            throw new BusinessException(ErrorCode.BAD_REQUEST,"입력된 금액이 올바르지 않습니다.");
+        }
+
+        if (type == BudgetType.INCREASE) {
+            this.totalBudget = this.totalBudget + changedBudget;
+            this.availableBudget = this.availableBudget + changedBudget;
+        }else if(type == BudgetType.DECREASE || type == BudgetType.SETTLEMENT){
+
+            if(availableBudget < changedBudget){
+                throw new BusinessException(ErrorCode.BAD_REQUEST,"가용예산을 초과하여 차감할 수 없습니다.");
+            }
+            this.totalBudget = this.totalBudget - changedBudget;
+            this.availableBudget = this.availableBudget - changedBudget;
+        }
+        return this;
+    }
 }
+
