@@ -26,9 +26,7 @@ public class BudgetRequestController {
     ){
         User user = rq.getActor();
         budgetRequestService.budgetRequestRegistration(roomId, user, budgetRequestRequest.reason(), budgetRequestRequest.requested_amount());
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.success(HttpStatus.CREATED, "예산신청 등록성공", null));
+        return ApiResponse.response(HttpStatus.CREATED, "예산신청 등록성공", null);
     }
 
 }

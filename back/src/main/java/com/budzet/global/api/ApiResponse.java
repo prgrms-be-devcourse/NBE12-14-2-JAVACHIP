@@ -2,6 +2,7 @@ package com.budzet.global.api;
 
 import com.budzet.global.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 public record ApiResponse<T>(
         int resultCode,
@@ -19,5 +20,11 @@ public record ApiResponse<T>(
 
     public static <T> ApiResponse<T> error(ErrorCode errorCode, T data) {
         return new ApiResponse<>(errorCode.getStatus().value(), errorCode.getMessage(), data);
+    }
+
+    public static <T> ResponseEntity<ApiResponse<T>> response(HttpStatus status, String message, T data) {
+        return ResponseEntity
+                .status(status)
+                .body(ApiResponse.success(status, message, data));
     }
 }
