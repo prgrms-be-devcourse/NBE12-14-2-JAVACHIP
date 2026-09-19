@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface BudgetChangeRepository extends JpaRepository<BudgetChange, Long> {
 
-    List<BudgetChange> findAllByRoomIdOrderByCreatedAtDesc(long roomId);
+    List<BudgetChange> findAllByRoomIdOrderByCreatedAtDesc(Long roomId);
+    List<BudgetChange> findAllByRoomIdAndUserIdOrderByCreatedAtDesc(Long roomId, Long userId);
 }
