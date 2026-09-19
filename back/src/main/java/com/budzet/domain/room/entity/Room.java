@@ -67,6 +67,10 @@ public class Room {
         this.name = name;
     }
 
+    public void addBudgetChange(BudgetChange budgetChange){
+        this.budgetChanges.add(budgetChange);
+    }
+
     public Room updateTotalBudget(Long changedBudget, BudgetType type) {
         if(changedBudget == null || changedBudget <= 0 ){
             throw new BusinessException(ErrorCode.BAD_REQUEST,"입력된 금액이 올바르지 않습니다.");

@@ -68,6 +68,7 @@ public class BudgetService {
                 budgetUpdateRequest.reason(),
                 budgetUpdateRequest.totalBudget()
                 );
+        room.addBudgetChange(budgetChange);
         budgetChangeRepository.save(budgetChange);
 
         return BudgetUpdateResponse.from(room);

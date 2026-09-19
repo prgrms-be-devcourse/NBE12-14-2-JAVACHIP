@@ -66,6 +66,7 @@ public class BudgetChangeService {
         room.settleBudget(budgetChange.getChangeBudget(), budgetChange.getChangedBudget());
 
         //정산 후 저장
+        room.addBudgetChange(budgetChange);
         budgetChangeRepository.save(budgetChange);
 
         return BudgetChangeCreateResponse.from(budgetChange);
