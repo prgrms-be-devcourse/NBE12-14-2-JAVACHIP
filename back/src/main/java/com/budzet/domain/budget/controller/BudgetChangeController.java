@@ -2,7 +2,6 @@ package com.budzet.domain.budget.controller;
 
 import com.budzet.domain.budget.dto.BudgetChangeCreateRequest;
 import com.budzet.domain.budget.dto.BudgetChangeCreateResponse;
-import com.budzet.domain.budget.dto.BudgetChangeListResponse;
 import com.budzet.domain.budget.service.BudgetChangeService;
 import com.budzet.domain.user.entity.User;
 import com.budzet.global.api.ApiResponse;
