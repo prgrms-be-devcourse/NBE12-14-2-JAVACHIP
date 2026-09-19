@@ -20,7 +20,11 @@ public enum ErrorCode {
     BUDGET_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 모임에 등록된 예산 정보가 없습니다."),
     ROOM_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 모임이 존재하지 않습니다."),
     FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN,"해당 요청에 대한 권한이 없습니다."),
+    FORBIDDEN_REQUEST_WRITER(HttpStatus.FORBIDDEN,"해당 신청의 신청자만 정산할 수 있습니다."),
     BUDGET_EXCEEDED(HttpStatus.BAD_REQUEST,"가용예산을 초과하여 차감할 수 없습니다."),
+    BUDGET_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 에산신청이 존재하지 않습니다."),
+    BUDGET_REQUEST_NOT_APPROVED(HttpStatus.BAD_REQUEST, "승인된 예산 신청 건이 아닙니다."),
+    SETTLEMENT_AMOUNT_EXCEEDS_APPROVED(HttpStatus.BAD_REQUEST,"승인된 금액을 초과하여 정산할 수 없습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
 
     private final HttpStatus status;

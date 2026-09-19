@@ -49,7 +49,7 @@ public class BudgetServiceTest {
 
     @Test
     @DisplayName("예산조회")
-    void getBudget_success(){
+    void getBudget_success() {
 
         //given
         Long roomId = 1L;
@@ -85,7 +85,7 @@ public class BudgetServiceTest {
 
     @Test
     @DisplayName("예산조회 - 모임이 존재하지 않을 때")
-    void getBudget_roomNotFound(){
+    void getBudget_roomNotFound() {
 
         //given
         Long roomId = 1L;
@@ -109,7 +109,7 @@ public class BudgetServiceTest {
 
     @Test
     @DisplayName("예산조회 - 예산이 존재하지 않을 때")
-    void getBudget_budgetNotFound(){
+    void getBudget_budgetNotFound() {
 
         //given
         Long roomId = 1L;
@@ -157,12 +157,11 @@ public class BudgetServiceTest {
 
     @Test
     @DisplayName("예산 변경 내역 조회")
-    void getBudgetHistory_success(){
+    void getBudgetHistory_success() {
 
         //given
         Long roomId = 1L;
         Long userId = 100L;
-        Room room = mock(Room.class);
         BudgetChange budgetChange = mock(BudgetChange.class);
         UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
         LocalDateTime now = LocalDateTime.now();
@@ -170,15 +169,13 @@ public class BudgetServiceTest {
         when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
                 .thenReturn(Optional.of(userRoomConnection));
 
-        when(roomRepository.findById(roomId))
-                .thenReturn(Optional.of(room));
-
         when(budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId))
                 .thenReturn(List.of(budgetChange));
 
         when(budgetChange.getId()).thenReturn(10L);
         when(budgetChange.getChangedBudget()).thenReturn(8000L);
         when(budgetChange.getType()).thenReturn(BudgetType.SETTLEMENT);
+        when(budgetChange.getUserName()).thenReturn("홍길동");
         when(budgetChange.getReason()).thenReturn("장비대여");
         when(budgetChange.getCreatedAt()).thenReturn(now);
 
@@ -193,6 +190,7 @@ public class BudgetServiceTest {
         assertEquals(10L, historyItem.id());
         assertEquals(8000L, historyItem.changedBudget());
         assertEquals("SETTLEMENT", historyItem.type());
+        assertEquals("홍길동", historyItem.userName());
         assertEquals("장비대여", historyItem.reason());
         assertEquals(now, historyItem.processedAt());
     }
@@ -200,7 +198,7 @@ public class BudgetServiceTest {
 
     @Test
     @DisplayName("예산 변경 내역 조회 - 변동 내역이 없을 때 빈 리스트 반환")
-    void getBudgetHistory_emptyHistory(){
+    void getBudgetHistory_emptyHistory() {
 
         //given
         Long roomId = 1L;
@@ -211,9 +209,6 @@ public class BudgetServiceTest {
         when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
                 .thenReturn(Optional.of(userRoomConnection));
 
-        when(roomRepository.findById(roomId))
-                .thenReturn(Optional.of(room));
-
         when(budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId))
                 .thenReturn(Collections.emptyList());
 
@@ -223,30 +218,6 @@ public class BudgetServiceTest {
         //then
         assertNotNull(result);
         assertTrue(result.history().isEmpty());
-    }
-
-    @Test
-    @DisplayName("예산 변경 내역 조회 - 모임이 존재하지 않을 때")
-    void getBudgetHistory_roomNotFound(){
-
-        //given
-        Long roomId = 1L;
-        Long userId = 100L;
-        UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
-
-        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
-                .thenReturn(Optional.of(userRoomConnection));
-
-        when(roomRepository.findById(roomId))
-                .thenReturn(Optional.empty());
-
-        //when & then
-        BusinessException exception = assertThrows(
-                BusinessException.class,
-                () -> budgetService.getBudgetHistory(roomId, userId)
-        );
-
-        assertEquals("해당 모임이 존재하지 않습니다.", exception.getMessage());
     }
 
     @Test

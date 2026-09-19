@@ -42,7 +42,6 @@ public class BudgetService {
     public BudgetHistoryResponse getBudgetHistory(Long roomId, Long userId) {
 
         validateRoomMember(roomId, userId);
-        findByRoomId(roomId);
         List<BudgetChange> budgetChanges = budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId);
         return BudgetHistoryResponse.from(budgetChanges);
     }
@@ -61,25 +60,32 @@ public class BudgetService {
 
         room.updateTotalBudget(budgetUpdateRequest.totalBudget(),
                 budgetUpdateRequest.budgetType());
-        BudgetChange budgetChange = new BudgetChange(room, userRoomConnection.getUser(), budgetUpdateRequest);
+        BudgetChange budgetChange = new BudgetChange(
+                room,
+                userRoomConnection.getUser(),
+                userRoomConnection.getUser().getName(),
+                budgetUpdateRequest.budgetType(),
+                budgetUpdateRequest.reason(),
+                budgetUpdateRequest.totalBudget()
+                );
         budgetChangeRepository.save(budgetChange);
 
         return BudgetUpdateResponse.from(room);
     }
 
 
-    private Room findByRoomId(Long roomId){
+    public Room findByRoomId(Long roomId){
         return roomRepository.findById(roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
     }
 
-    private Room findByRoomIdWithLock(Long roomId){
+    public Room findByRoomIdWithLock(Long roomId){
 
         return roomRepository.findByWithLock(roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
     }
 
-    private UserRoomConnection validateRoomMember(Long roomId, Long userId){
+    public UserRoomConnection validateRoomMember(Long roomId, Long userId){
 
         return userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId,roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM));
