@@ -60,7 +60,8 @@ public class BudgetChangeServiceTest {
         when(budgetRequestRepository.findById(requestId)).thenReturn(Optional.of(budgetRequest));
         when(budgetRequest.getUser()).thenReturn(user);
         when(user.getId()).thenReturn(userId);
-        when(budgetRequest.getStatus()).thenReturn("APPROVED");;
+        when(budgetRequest.getStatus()).thenReturn("APPROVED");
+        when(budgetRequest.getReason()).thenReturn("동아리 장비 구매 신청");
         when(budgetRequest.getRequestedAmount()).thenReturn(10000L);
 
         when(budgetService.findByRoomIdWithLock(roomId)).thenReturn(room);
@@ -74,6 +75,7 @@ public class BudgetChangeServiceTest {
         assertNotNull(response);
         assertEquals(10000L, response.changeBudget());
         assertEquals(8000L, response.changedBudget());
+        assertEquals("실제 장비 구매 영수증 첨부", response.changeReason());
         assertEquals(BudgetType.SETTLEMENT, response.budgetType());
 
         verify(room, times(1)).settleBudget(10000L, 8000L);

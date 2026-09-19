@@ -42,6 +42,7 @@ public class BudgetService {
     public BudgetHistoryResponse getBudgetHistory(Long roomId, Long userId) {
 
         validateRoomMember(roomId, userId);
+        findByRoomId(roomId);
         List<BudgetChange> budgetChanges = budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId);
         return BudgetHistoryResponse.from(budgetChanges);
     }
