@@ -1,5 +1,6 @@
 package com.budzet.domain.budget.entity;
 
+import com.budzet.domain.budget.dto.BudgetChangeUpdateRequest;
 import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -67,5 +68,15 @@ public class BudgetChange {
 
     public void addBudgetRequest(BudgetRequest budgetRequest) {
         this.request = budgetRequest;
+    }
+
+    //todo 금액도 변경할지 이름만, 이유만 변경할지
+    public void updateChange(BudgetChangeUpdateRequest request, User user){
+        this.user = user;
+        this.userName = request.userName();
+        this.changeBudget = request.changeBudget();
+        this.changedBudget = request.changedBudget();
+        this.changeReason = request.changeReason();
+        this.reason = request.reason();
     }
 }

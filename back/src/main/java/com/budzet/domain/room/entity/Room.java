@@ -71,7 +71,7 @@ public class Room {
         this.budgetChanges.add(budgetChange);
     }
 
-    public Room updateTotalBudget(Long changedBudget, BudgetType type) {
+    public void updateTotalBudget(Long changedBudget, BudgetType type) {
         if(changedBudget == null || changedBudget <= 0 ){
             throw new BusinessException(ErrorCode.BAD_REQUEST,"입력된 금액이 올바르지 않습니다.");
         }
@@ -85,12 +85,10 @@ public class Room {
             }
             this.totalBudget = this.totalBudget - changedBudget;
             this.availableBudget = this.availableBudget - changedBudget;
-
         }
-        return this;
     }
 
-    public Room settleBudget(Long requestedAmount, Long changedBudget){
+    public void settleBudget(Long requestedAmount, Long changedBudget){
 
             if(changedBudget == null || changedBudget <= 0 ){
                 throw new BusinessException(ErrorCode.BAD_REQUEST,"입력된 금액이 올바르지 않습니다.");
@@ -109,7 +107,11 @@ public class Room {
             Long balanceBudget = requestedAmount - changedBudget; //잔액 = 신청 승인된 금액 - 실제 사용 금액
             this.totalBudget = this.totalBudget - changedBudget;  //실제 예산 - 정산 금액
             this.availableBudget = this.availableBudget + balanceBudget;  //가용 예산 + 잔액
+        }
 
-            return this;
+        //todo 금액도 변경하면 사용, 아니면 삭제
+        public void updateTotalBudget(Long updateChanged){
+            this.totalBudget = this.totalBudget + updateChanged;
+            this.availableBudget = this.availableBudget + updateChanged;
         }
     }

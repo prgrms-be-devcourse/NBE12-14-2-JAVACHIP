@@ -1,9 +1,6 @@
 package com.budzet.domain.budget.controller;
 
-import com.budzet.domain.budget.dto.BudgetChangeCreateRequest;
-import com.budzet.domain.budget.dto.BudgetChangeCreateResponse;
-import com.budzet.domain.budget.dto.BudgetChangeDetailResponse;
-import com.budzet.domain.budget.dto.BudgetChangeListResponse;
+import com.budzet.domain.budget.dto.*;
 import com.budzet.domain.budget.service.BudgetChangeService;
 import com.budzet.domain.user.entity.User;
 import com.budzet.global.api.ApiResponse;
@@ -55,5 +52,18 @@ public class BudgetChangeController {
         User user = rq.getActor();
         BudgetChangeDetailResponse response = budgetChangeService.budgetChangeDetail(roomId, user.getId(), changeId);
         return ApiResponse.response(HttpStatus.OK,"정산 내역 상세조회 성공",response);
+    }
+
+    @PatchMapping("/{roomId}/budget/changes/{changeId}")
+    public ResponseEntity<ApiResponse<BudgetChangeUpdateResponse>> updateBudgetChange(
+            @PathVariable Long roomId,
+            @PathVariable Long changeId,
+            @RequestBody @Valid BudgetChangeUpdateRequest request
+    ){
+        User user = rq.getActor();
+        BudgetChangeUpdateResponse response = budgetChangeService.UpdateBudgetChange(
+                roomId, user.getId(), changeId, request);
+
+        return ApiResponse.response(HttpStatus.OK,"정산 내역 수정 성공",response);
     }
 }
