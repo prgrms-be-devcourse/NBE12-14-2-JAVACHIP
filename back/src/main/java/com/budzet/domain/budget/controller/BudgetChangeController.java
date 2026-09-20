@@ -20,7 +20,7 @@ public class BudgetChangeController {
     private final Rq rq;
     private final BudgetChangeService budgetChangeService;
 
-    @PostMapping("/{roomId}/budget/change/{requestId}")
+    @PostMapping("/{roomId}/budget/changes/{requestId}")
     public ResponseEntity<ApiResponse<BudgetChangeCreateResponse>> createBudgetChange(
             @PathVariable Long roomId,
             @PathVariable Long requestId,
