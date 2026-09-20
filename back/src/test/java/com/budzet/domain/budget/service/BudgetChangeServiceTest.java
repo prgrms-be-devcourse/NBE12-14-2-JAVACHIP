@@ -2,6 +2,8 @@ package com.budzet.domain.budget.service;
 
 import com.budzet.domain.budget.dto.BudgetChangeCreateRequest;
 import com.budzet.domain.budget.dto.BudgetChangeCreateResponse;
+import com.budzet.domain.budget.dto.BudgetChangeDetailResponse;
+import com.budzet.domain.budget.dto.BudgetChangeListResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetRequest;
 import com.budzet.domain.budget.entity.BudgetType;
@@ -11,6 +13,7 @@ import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.user.entity.User;
 import com.budzet.global.exception.BusinessException;
+import com.budzet.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
