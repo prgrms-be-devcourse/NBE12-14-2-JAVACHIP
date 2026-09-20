@@ -2,7 +2,6 @@ package com.budzet.domain.budget.service;
 
 import com.budzet.domain.budget.dto.BudgetChangeCreateRequest;
 import com.budzet.domain.budget.dto.BudgetChangeCreateResponse;
-import com.budzet.domain.budget.dto.BudgetChangeListResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetRequest;
 import com.budzet.domain.budget.entity.BudgetType;
@@ -19,8 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
