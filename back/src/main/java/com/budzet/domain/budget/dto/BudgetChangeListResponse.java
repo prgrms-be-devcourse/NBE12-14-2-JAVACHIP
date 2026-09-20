@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record BudgetChangeListResponse(
-        List<ListItem> list
+        List<ListItem> changes
 ){
     public static BudgetChangeListResponse from(List<BudgetChange> budgetChanges){
 
@@ -19,7 +19,7 @@ public record BudgetChangeListResponse(
 
     public record ListItem(
             Long id,
-            Long changeBudget,
+            Long changedBudget,
             BudgetType type,
             String userName,
             String reason,

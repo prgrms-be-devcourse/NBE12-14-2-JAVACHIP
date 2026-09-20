@@ -247,4 +247,58 @@ public class BudgetControllerTest {
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("본인 정산 내역 목록 조회 성공 - 200 OK")
+    void getMyBudgetChanges_success() throws Exception {
+        // given
+        Long roomId = 1L;
+        LocalDateTime now = LocalDateTime.now();
+
+        BudgetChange budgetChange = mock(BudgetChange.class);
+
+        given(budgetChange.getId()).willReturn(50L);
+        given(budgetChange.getChangedBudget()).willReturn(9500L);
+        given(budgetChange.getType()).willReturn(BudgetType.SETTLEMENT);
+        given(budgetChange.getUserName()).willReturn("홍길동");
+        given(budgetChange.getCreatedAt()).willReturn(now);
+        given(budgetChange.getReason()).willReturn("팀 회식 신청");
+
+        BudgetChangeListResponse response = BudgetChangeListResponse.from(List.of(budgetChange));
+
+        given(budgetChangeService.budgetChangeList(eq(roomId), eq(testUserId)))
+                .willReturn(response);
+
+        // when & then
+        mvc.perform(get("/rooms/{roomId}/budget/changes/me", roomId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value(200))
+                .andExpect(jsonPath("$.message").value("정산 내역 조회 성공"))
+                .andExpect(jsonPath("$.data.changes[0].id").value(50L))
+                .andExpect(jsonPath("$.data.changes[0].changedBudget").value(9500L))
+                .andExpect(jsonPath("$.data.changes[0].type").value("SETTLEMENT"))
+                .andExpect(jsonPath("$.data.changes[0].userName").value("홍길동"))
+                .andExpect(jsonPath("$.data.changes[0].processedAt").exists())
+                .andExpect(jsonPath("$.data.changes[0].reason").value("팀 회식 신청"));
+    }
+
+    @Test
+    @DisplayName("본인 정산 내역 목록 조회 성공 - 내역이 없는 경우 빈 배열 반환")
+    void getMyBudgetChanges_emptyList() throws Exception {
+        // given
+        Long roomId = 1L;
+        BudgetChangeListResponse emptyResponse = BudgetChangeListResponse.from(List.of());
+
+        given(budgetChangeService.budgetChangeList(eq(roomId), eq(testUserId)))
+                .willReturn(emptyResponse);
+
+        // when & then
+        mvc.perform(get("/rooms/{roomId}/budget/changes/me", roomId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value(200))
+                .andExpect(jsonPath("$.message").value("정산 내역 조회 성공"))
+                .andExpect(jsonPath("$.data.changes").isEmpty());
+    }
 }
