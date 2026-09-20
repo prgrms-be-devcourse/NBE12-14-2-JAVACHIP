@@ -2,6 +2,8 @@ package com.budzet.domain.budget.service;
 
 import com.budzet.domain.budget.dto.BudgetChangeCreateRequest;
 import com.budzet.domain.budget.dto.BudgetChangeCreateResponse;
+import com.budzet.domain.budget.dto.BudgetChangeDetailResponse;
+import com.budzet.domain.budget.dto.BudgetChangeListResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetRequest;
 import com.budzet.domain.budget.entity.BudgetType;
@@ -83,5 +85,16 @@ public class BudgetChangeService {
                 budgetChangeRepository.findAllByRoomIdAndTypeOrderByCreatedAtDesc(roomId, BudgetType.SETTLEMENT);
 
         return BudgetChangeListResponse.from(budgetChanges);
+    }
+
+    @Transactional(readOnly = true)
+    public BudgetChangeDetailResponse budgetChangeDetail(Long roomId, Long userId, Long changeId){
+
+        budgetService.validateRoomMember(roomId, userId);
+
+        BudgetChange budgetChange = budgetChangeRepository.findById(changeId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.BUDGET_CHANGE_NOT_FOUND));
+
+        return BudgetChangeDetailResponse.from(budgetChange);
     }
 }

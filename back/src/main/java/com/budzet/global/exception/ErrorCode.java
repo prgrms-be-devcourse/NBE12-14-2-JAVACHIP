@@ -28,6 +28,7 @@ public enum ErrorCode {
     BUDGET_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 에산신청이 존재하지 않습니다."),
     BUDGET_REQUEST_NOT_APPROVED(HttpStatus.BAD_REQUEST, "승인된 예산 신청 건이 아닙니다."),
     SETTLEMENT_AMOUNT_EXCEEDS_APPROVED(HttpStatus.BAD_REQUEST,"승인된 금액을 초과하여 정산할 수 없습니다."),
+    BUDGET_CHANGE_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 정산내역이 존재하지 않습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
 
     private final HttpStatus status;

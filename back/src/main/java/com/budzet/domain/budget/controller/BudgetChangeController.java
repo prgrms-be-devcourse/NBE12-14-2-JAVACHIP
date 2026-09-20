@@ -2,6 +2,7 @@ package com.budzet.domain.budget.controller;
 
 import com.budzet.domain.budget.dto.BudgetChangeCreateRequest;
 import com.budzet.domain.budget.dto.BudgetChangeCreateResponse;
+import com.budzet.domain.budget.dto.BudgetChangeListResponse;
 import com.budzet.domain.budget.service.BudgetChangeService;
 import com.budzet.domain.user.entity.User;
 import com.budzet.global.api.ApiResponse;
@@ -43,5 +44,15 @@ public class BudgetChangeController {
         User user = rq.getActor();
         BudgetChangeListResponse response = budgetChangeService.budgetChangeList(roomId, user.getId());
         return ApiResponse.response(HttpStatus.OK,"정산 내역 조회 성공",response);
+    }
+
+    @GetMapping("/{roomId}/budget/changes/{changeId}")
+    public ResponseEntity<ApiResponse<BudgetChangeDetailResponse>> budgetChangeDetail(
+            @PathVariable Long roomId,
+            @PathVariable Long changeId
+    ){
+        User user = rq.getActor();
+        BudgetChangeDetailResponse response = budgetChangeService.budgetChangeDetail(roomId, user.getId(), changeId);
+        return ApiResponse.response(HttpStatus.OK,"정산 내역 상세조회 성공",response);
     }
 }
