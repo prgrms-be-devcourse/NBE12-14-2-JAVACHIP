@@ -217,7 +217,7 @@ public class BudgetControllerTest {
                 .willReturn(response);
 
         // when & then
-        mvc.perform(post("/rooms/{roomId}/budget/change/{requestId}", roomId, requestId)
+        mvc.perform(post("/rooms/{roomId}/budget/changes/{requestId}", roomId, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -243,7 +243,7 @@ public class BudgetControllerTest {
         BudgetChangeCreateRequest invalidRequest = new BudgetChangeCreateRequest(-1000L, "사유");
 
         // when & then
-        mvc.perform(post("/rooms/{roomId}/budget/change/{requestId}", roomId, requestId)
+        mvc.perform(post("/rooms/{roomId}/budget/changes/{requestId}", roomId, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
