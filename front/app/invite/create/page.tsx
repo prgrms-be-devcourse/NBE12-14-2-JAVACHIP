@@ -1,3 +1,5 @@
+"use client"
+
 import CreateInviteButton from "../CreateInviteButton";
 
 export default function CreateInvitePage() {
