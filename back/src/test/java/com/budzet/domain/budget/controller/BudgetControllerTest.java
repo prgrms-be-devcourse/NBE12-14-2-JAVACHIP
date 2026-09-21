@@ -248,7 +248,7 @@ public class BudgetControllerTest {
     }
 
     @Test
-    @DisplayName("본인 정산 내역 목록 조회 성공 - 200 OK")
+    @DisplayName("정산 내역 목록 조회 성공 - 200 OK")
     void getMyBudgetChanges_success() throws Exception {
         // given
         Long roomId = 1L;
@@ -269,7 +269,7 @@ public class BudgetControllerTest {
                 .willReturn(response);
 
         // when & then
-        mvc.perform(get("/rooms/{roomId}/budget/changes/me", roomId)
+        mvc.perform(get("/rooms/{roomId}/budget/changes/settlement", roomId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value(200))
@@ -293,7 +293,7 @@ public class BudgetControllerTest {
                 .willReturn(emptyResponse);
 
         // when & then
-        mvc.perform(get("/rooms/{roomId}/budget/changes/me", roomId)
+        mvc.perform(get("/rooms/{roomId}/budget/changes/settlement", roomId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value(200))

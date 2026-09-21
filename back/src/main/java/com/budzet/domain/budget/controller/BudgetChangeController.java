@@ -37,7 +37,7 @@ public class BudgetChangeController {
 
     }
 
-    @GetMapping("/{roomId}/budget/changes/me")
+    @GetMapping("/{roomId}/budget/changes/settlement")
     public ResponseEntity<ApiResponse<BudgetChangeListResponse>> budgetChangeList(
             @PathVariable Long roomId
     ){
