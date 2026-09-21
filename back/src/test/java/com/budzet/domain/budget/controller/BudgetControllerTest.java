@@ -325,7 +325,6 @@ public class BudgetControllerTest {
         given(budgetChange.getUser()).willReturn(user);
         given(budgetChange.getChangeBudget()).willReturn(5000L);
         given(budgetChange.getChangedBudget()).willReturn(9500L);
-        given(budgetChange.getChangeReason()).willReturn("영수증 첨부 정산");
         given(budgetChange.getType()).willReturn(BudgetType.SETTLEMENT);
         given(budgetChange.getUserName()).willReturn("홍길동");
         given(budgetChange.getCreatedAt()).willReturn(now);
