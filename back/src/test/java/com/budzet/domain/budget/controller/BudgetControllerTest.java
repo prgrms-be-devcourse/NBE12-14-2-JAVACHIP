@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = "JWT_SECRET=test_jwt_secret_key_12345678901234567890")
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 public class BudgetControllerTest {
 
     @Autowired
