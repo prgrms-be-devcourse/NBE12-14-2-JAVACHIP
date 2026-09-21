@@ -1,6 +1,6 @@
 package com.budzet.domain.budget.controller;
 
-import com.budzet.domain.budget.dto.BudgetRequestListResponse;
+import com.budzet.domain.budget.dto.BudgetRequestResponse;
 import com.budzet.domain.budget.dto.BudgetRequestRequest;
 import com.budzet.domain.budget.service.BudgetRequestService;
 import com.budzet.domain.user.entity.User;
@@ -43,7 +43,7 @@ public class BudgetRequestController {
      * @return 예산신청 목록
      */
     @GetMapping("/{roomId}/budget/request/list")
-    public ResponseEntity<ApiResponse<List<BudgetRequestListResponse>>> getBudgetRequestList(
+    public ResponseEntity<ApiResponse<List<BudgetRequestResponse>>> getBudgetRequestList(
             @PathVariable Long roomId
     ){
         User user = rq.getActor();
@@ -57,7 +57,7 @@ public class BudgetRequestController {
      * @return 예산신청 상세정보
      */
     @GetMapping("/{roomId}/budget/request/{requestId}")
-    public ResponseEntity<ApiResponse<BudgetRequestListResponse>> getBudgetRequest(
+    public ResponseEntity<ApiResponse<BudgetRequestResponse>> getBudgetRequest(
             @PathVariable Long roomId,
             @PathVariable Long requestId
     ){

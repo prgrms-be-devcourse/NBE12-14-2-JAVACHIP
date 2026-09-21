@@ -2,7 +2,8 @@ package com.budzet.domain.budget.dto;
 
 import java.time.LocalDateTime;
 
-public record BudgetRequestListResponse(
+public record BudgetRequestResponse(
+        Long id,
         Long roomId,
         Long userId,
         String reason,
