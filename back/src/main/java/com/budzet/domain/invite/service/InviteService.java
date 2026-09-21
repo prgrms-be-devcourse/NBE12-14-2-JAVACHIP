@@ -104,16 +104,18 @@ public class InviteService {
         Invite invite = inviteRepository.findById(code)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVITE_NOT_FOUND));
 
-        // 만료일이 유효한지 확인
+        // 대상 Room을 잠근 상태로 조회
+        Long roomId = invite.getRoom().getId();
+        Room room = roomRepository.findByWithLock(roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+
+        // 잠금 획득 후 만료일이 유효한지 확인
         if (!invite.getExpireAt().isAfter(LocalDateTime.now())) {
             throw new BusinessException(ErrorCode.INVITE_EXPIRED);
         }
 
-        // 대상 Room 가져오기
-        Room room = invite.getRoom();
-
         // 이미 참여한 상태인지 확인
-        if (userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, room.getId()).isPresent()) {
+        if (userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId).isPresent()) {
             throw new BusinessException(ErrorCode.USER_ALREADY_JOINED_ROOM);
         }
 

@@ -212,6 +212,7 @@ class InviteServiceTest {
         when(invite.getExpireAt()).thenReturn(LocalDateTime.now().plusHours(1));
         when(invite.getRoom()).thenReturn(room);
         when(room.getId()).thenReturn(roomId);
+        when(roomRepository.findByWithLock(roomId)).thenReturn(Optional.of(room));
         when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
                 .thenReturn(Optional.empty());
         when(userRepository.getReferenceById(userId)).thenReturn(user);
@@ -225,6 +226,7 @@ class InviteServiceTest {
         assertThat(response.roomId()).isEqualTo(roomId);
         assertThat(response.authority()).isEqualTo(Authority.MEMBER.name());
         assertThat(response.joined()).isTrue();
+        verify(roomRepository).findByWithLock(roomId);
         verify(userRoomConnectionRepository).save(any(UserRoomConnection.class));
     }
 
@@ -246,10 +248,15 @@ class InviteServiceTest {
     @DisplayName("만료된 초대 코드 사용 시, 예외 발생")
     void joinRoomWithExpiredInvite() {
         String code = "EXPIRED123";
+        Long roomId = 2L;
         Invite invite = mock(Invite.class);
+        Room room = mock(Room.class);
 
         when(inviteRepository.findById(code)).thenReturn(Optional.of(invite));
         when(invite.getExpireAt()).thenReturn(LocalDateTime.now().minusSeconds(1));
+        when(invite.getRoom()).thenReturn(room);
+        when(room.getId()).thenReturn(roomId);
+        when(roomRepository.findByWithLock(roomId)).thenReturn(Optional.of(room));
 
         assertThatThrownBy(() -> inviteService.joinRoom(code, 1L))
                 .isInstanceOf(BusinessException.class)
@@ -271,6 +278,7 @@ class InviteServiceTest {
         when(invite.getExpireAt()).thenReturn(LocalDateTime.now().plusHours(1));
         when(invite.getRoom()).thenReturn(room);
         when(room.getId()).thenReturn(roomId);
+        when(roomRepository.findByWithLock(roomId)).thenReturn(Optional.of(room));
         when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
                 .thenReturn(Optional.of(mock(UserRoomConnection.class)));
 
@@ -278,6 +286,7 @@ class InviteServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_ALREADY_JOINED_ROOM);
 
+        verify(roomRepository).findByWithLock(roomId);
         verify(userRoomConnectionRepository, never()).save(any(UserRoomConnection.class));
     }
 
