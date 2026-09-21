@@ -1,6 +1,7 @@
 package com.budzet.domain.invite.service;
 
 import com.budzet.domain.invite.dto.InviteResponse;
+import com.budzet.domain.invite.dto.InviteJoinResponse;
 import com.budzet.domain.invite.entity.Invite;
 import com.budzet.domain.invite.repository.InviteRepository;
 import com.budzet.domain.room.entity.Authority;
@@ -8,8 +9,11 @@ import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.repository.RoomRepository;
 import com.budzet.domain.room.repository.UserRoomConnectionRepository;
+import com.budzet.domain.user.entity.User;
+import com.budzet.domain.user.repository.UserRepository;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -36,6 +40,9 @@ class InviteServiceTest {
 
     @Mock
     private UserRoomConnectionRepository userRoomConnectionRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private InviteService inviteService;
@@ -188,6 +195,99 @@ class InviteServiceTest {
 
         verify(inviteRepository)
                 .findById(token);
+    }
+
+    @Test
+    @DisplayName("유효한 초대 코드로 모임에 참여할 수 있다.")
+    void joinRoom() {
+        String code = "ABC1234567";
+        Long userId = 1L;
+        Long roomId = 2L;
+
+        Invite invite = mock(Invite.class);
+        Room room = mock(Room.class);
+        User user = mock(User.class);
+
+        when(inviteRepository.findById(code)).thenReturn(Optional.of(invite));
+        when(invite.getExpireAt()).thenReturn(LocalDateTime.now().plusHours(1));
+        when(invite.getRoom()).thenReturn(room);
+        when(room.getId()).thenReturn(roomId);
+        when(roomRepository.findByWithLock(roomId)).thenReturn(Optional.of(room));
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.empty());
+        when(userRepository.getReferenceById(userId)).thenReturn(user);
+        when(user.getId()).thenReturn(userId);
+        when(userRoomConnectionRepository.save(any(UserRoomConnection.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        InviteJoinResponse response = inviteService.joinRoom(code, userId);
+
+        assertThat(response.userId()).isEqualTo(userId);
+        assertThat(response.roomId()).isEqualTo(roomId);
+        assertThat(response.authority()).isEqualTo(Authority.MEMBER.name());
+        assertThat(response.joined()).isTrue();
+        verify(roomRepository).findByWithLock(roomId);
+        verify(userRoomConnectionRepository).save(any(UserRoomConnection.class));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 초대 코드 사용 시, 예외 발생")
+    void joinRoomWithNonExistentInvite() {
+        String code = "NOTFOUND";
+
+        when(inviteRepository.findById(code)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> inviteService.joinRoom(code, 1L))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVITE_NOT_FOUND);
+
+        verify(userRoomConnectionRepository, never()).save(any(UserRoomConnection.class));
+    }
+
+    @Test
+    @DisplayName("만료된 초대 코드 사용 시, 예외 발생")
+    void joinRoomWithExpiredInvite() {
+        String code = "EXPIRED123";
+        Long roomId = 2L;
+        Invite invite = mock(Invite.class);
+        Room room = mock(Room.class);
+
+        when(inviteRepository.findById(code)).thenReturn(Optional.of(invite));
+        when(invite.getExpireAt()).thenReturn(LocalDateTime.now().minusSeconds(1));
+        when(invite.getRoom()).thenReturn(room);
+        when(room.getId()).thenReturn(roomId);
+        when(roomRepository.findByWithLock(roomId)).thenReturn(Optional.of(room));
+
+        assertThatThrownBy(() -> inviteService.joinRoom(code, 1L))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVITE_EXPIRED);
+
+        verify(userRoomConnectionRepository, never()).save(any(UserRoomConnection.class));
+    }
+
+    @Test
+    @DisplayName("이미 참여한 멤버가 중복 참여 요청 시, 예외 발생")
+    void joinRoomWhenAlreadyJoined() {
+        String code = "ABC1234567";
+        Long userId = 1L;
+        Long roomId = 2L;
+        Invite invite = mock(Invite.class);
+        Room room = mock(Room.class);
+
+        when(inviteRepository.findById(code)).thenReturn(Optional.of(invite));
+        when(invite.getExpireAt()).thenReturn(LocalDateTime.now().plusHours(1));
+        when(invite.getRoom()).thenReturn(room);
+        when(room.getId()).thenReturn(roomId);
+        when(roomRepository.findByWithLock(roomId)).thenReturn(Optional.of(room));
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
+                .thenReturn(Optional.of(mock(UserRoomConnection.class)));
+
+        assertThatThrownBy(() -> inviteService.joinRoom(code, userId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_ALREADY_JOINED_ROOM);
+
+        verify(roomRepository).findByWithLock(roomId);
+        verify(userRoomConnectionRepository, never()).save(any(UserRoomConnection.class));
     }
 
     @Test

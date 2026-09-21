@@ -3,12 +3,14 @@ package com.budzet.domain.budget.controller;
 import com.budzet.domain.budget.dto.BudgetRequestRequest;
 import com.budzet.domain.budget.service.BudgetRequestService;
 import com.budzet.domain.user.entity.User;
+import com.budzet.domain.user.service.UserService;
 import com.budzet.global.rq.Rq;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 // 💡 요청하신 정확한 경로의 WebMvcTest 사용
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
@@ -24,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BudgetRequestController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class BudgetRequestControllerTest {
 
     @Autowired
@@ -35,6 +38,9 @@ class BudgetRequestControllerTest {
     // 💡 jpaAuditingHandler의 MappingContext 타입 캐스팅 요구 조건을 맞추기 위한 스프링 데이터 공통 인터페이스 선언
     @MockitoBean(name = "jpaMappingContext")
     private org.springframework.data.mapping.context.MappingContext<?, ?> jpaMappingContext;
+
+    @MockitoBean
+    private UserService userService;
 
     @MockitoBean
     private Rq rq;

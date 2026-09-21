@@ -24,6 +24,7 @@ public record BudgetHistoryResponse(
             Long id,
             Long changedBudget,
             String type,
+            String userName,
             String reason,
             LocalDateTime processedAt
             ){
@@ -32,6 +33,7 @@ public record BudgetHistoryResponse(
                     budgetChange.getId(),
                     budgetChange.getChangedBudget(),
                     budgetChange.getType().name(),
+                    budgetChange.getUserName(),
                     budgetChange.getReason(),
                     budgetChange.getCreatedAt()
             );
