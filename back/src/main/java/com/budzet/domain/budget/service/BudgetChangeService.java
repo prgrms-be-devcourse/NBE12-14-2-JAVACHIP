@@ -40,13 +40,6 @@ public class BudgetChangeService {
             throw new BusinessException(ErrorCode.FORBIDDEN_REQUEST_WRITER);
         }
 
-        //todo 관리자는 모든 맴버의 정산을 처리할 수 있는지 상의 후
-//        if(!(connection.getAuthority() == Authority.OWNER || connection.getAuthority() == Authority.OPERATOR)){
-//            if(!budgetRequest.getUser().getId().equals(userId)){
-//                throw new BusinessException(ErrorCode.FORBIDDEN_REQUEST_WRITER);
-//            }
-//        }
-
         //승인된 요청이 아닐 때 예외처리
         if(!"APPROVED".equals(budgetRequest.getStatus())){
             throw new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_APPROVED);
@@ -62,8 +55,7 @@ public class BudgetChangeService {
                 connection.getUser(),
                 connection.getUser().getName(),
                 type,
-                budgetRequest.getReason(),
-                createRequest.changeReason(),
+                createRequest.reason(),
                 budgetRequest.getRequestedAmount(),
                 createRequest.changedBudget()
         );

@@ -38,9 +38,6 @@ public class BudgetChange {
     @Column(length = 20)
     private String reason;
 
-    @Column(length = 40)
-    private String changeReason;
-
     private Long changeBudget;
 
     private Long changedBudget;
@@ -53,24 +50,22 @@ public class BudgetChange {
     private BudgetRequest request;
 
     public BudgetChange(Room room, User user, String userName, BudgetType type,
-                        String reason, String changeReason, Long changeBudget, Long changedBudget) {
+                        String reason, Long changeBudget, Long changedBudget) {
         this.room = room;
         this.user = user;
         this.userName = userName;
         this.type = type;
         this.reason = reason;
-        this.changeReason = changeReason;
         this.changeBudget = changeBudget;
         this.changedBudget = changedBudget;
     }
 
     public BudgetChange(Room room, User user, String userName, BudgetType type,
                         String reason, Long changeBudget) {
-        String changeReason = null;
-        this(room, user, userName, type, reason, changeReason, changeBudget, changeBudget);
+        this(room, user, userName, type, reason, changeBudget, changeBudget);
     }
 
-    public void addBudgetRequest(BudgetRequest budgetRequest){
+    public void addBudgetRequest(BudgetRequest budgetRequest) {
         this.request = budgetRequest;
     }
 }

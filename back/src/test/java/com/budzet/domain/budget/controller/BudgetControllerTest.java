@@ -204,7 +204,6 @@ public class BudgetControllerTest {
         given(budgetChange.getUser()).willReturn(user);
         given(budgetChange.getChangeBudget()).willReturn(5000L);
         given(budgetChange.getChangedBudget()).willReturn(9500L);
-        given(budgetChange.getChangeReason()).willReturn("회식비 정산");
         given(budgetChange.getType()).willReturn(BudgetType.SETTLEMENT);
         given(budgetChange.getUserName()).willReturn("홍길동");
         given(budgetChange.getCreatedAt()).willReturn(now);
@@ -228,10 +227,9 @@ public class BudgetControllerTest {
                 .andExpect(jsonPath("$.data.userId").value(testUserId))
                 .andExpect(jsonPath("$.data.changeBudget").value(5000L))
                 .andExpect(jsonPath("$.data.changedBudget").value(9500L))
-                .andExpect(jsonPath("$.data.changeReason").value("회식비 정산"))
                 .andExpect(jsonPath("$.data.budgetType").value("SETTLEMENT"))
                 .andExpect(jsonPath("$.data.userName").value("홍길동"))
-                .andExpect(jsonPath("$.data.requestReason").value("팀 회식 신청"));
+                .andExpect(jsonPath("$.data.reason").value("팀 회식 신청"));
     }
 
     @Test

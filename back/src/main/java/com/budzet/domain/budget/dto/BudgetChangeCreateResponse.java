@@ -11,11 +11,10 @@ public record BudgetChangeCreateResponse(
         Long userId,
         Long changeBudget,
         Long changedBudget,
-        String changeReason,
         BudgetType budgetType,
         String userName,
         LocalDateTime processedAt,
-        String requestReason
+        String reason
     ) {
     public static BudgetChangeCreateResponse from(BudgetChange budgetChange){
         return new BudgetChangeCreateResponse(
@@ -24,7 +23,6 @@ public record BudgetChangeCreateResponse(
                 budgetChange.getUser().getId(),
                 budgetChange.getChangeBudget(),
                 budgetChange.getChangedBudget(),
-                budgetChange.getChangeReason(),
                 budgetChange.getType(),
                 budgetChange.getUserName(),
                 budgetChange.getCreatedAt(),
