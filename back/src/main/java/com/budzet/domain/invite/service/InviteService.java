@@ -1,6 +1,7 @@
 package com.budzet.domain.invite.service;
 
 import com.budzet.domain.invite.dto.InviteResponse;
+import com.budzet.domain.invite.dto.InviteJoinResponse;
 import com.budzet.domain.invite.entity.Invite;
 import com.budzet.domain.invite.repository.InviteRepository;
 import com.budzet.domain.room.entity.Authority;
@@ -8,6 +9,8 @@ import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.repository.RoomRepository;
 import com.budzet.domain.room.repository.UserRoomConnectionRepository;
+import com.budzet.domain.user.entity.User;
+import com.budzet.domain.user.repository.UserRepository;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ public class InviteService {
     private final InviteRepository inviteRepository;
     private final RoomRepository roomRepository;
     private final UserRoomConnectionRepository userRoomConnectionRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public InviteResponse createInvite(Long roomId, Long userId) {
@@ -92,5 +96,32 @@ public class InviteService {
                         invite.getExpireAt()
                 ))
                 .toList();
+    }
+
+    @Transactional
+    public InviteJoinResponse joinRoom(String code, Long userId) {
+        // 초대 코드 조회
+        Invite invite = inviteRepository.findById(code)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVITE_NOT_FOUND));
+
+        // 만료일이 유효한지 확인
+        if (!invite.getExpireAt().isAfter(LocalDateTime.now())) {
+            throw new BusinessException(ErrorCode.INVITE_EXPIRED);
+        }
+
+        // 대상 Room 가져오기
+        Room room = invite.getRoom();
+
+        // 이미 참여한 상태인지 확인
+        if (userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, room.getId()).isPresent()) {
+            throw new BusinessException(ErrorCode.USER_ALREADY_JOINED_ROOM);
+        }
+
+        // 멤버 참여 처리하기(UserRoomConnection 생성)
+        User user = userRepository.getReferenceById(userId);
+        UserRoomConnection connection = UserRoomConnection.createMember(user, room);
+        UserRoomConnection savedConnection = userRoomConnectionRepository.save(connection);
+
+        return InviteJoinResponse.from(savedConnection);
     }
 }
