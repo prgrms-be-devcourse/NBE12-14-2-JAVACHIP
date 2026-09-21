@@ -84,7 +84,7 @@ public class BudgetChangeService {
         budgetService.validateRoomMember(roomId,userId);
 
         List<BudgetChange> budgetChanges =
-                budgetChangeRepository.findAllByRoomIdAndUserIdOrderByCreatedAtDesc(roomId,userId);
+                budgetChangeRepository.findAllByRoomIdAndTypeOrderByCreatedAtDesc(roomId, BudgetType.SETTLEMENT);
 
         return BudgetChangeListResponse.from(budgetChanges);
     }

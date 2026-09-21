@@ -63,8 +63,7 @@ public class BudgetChangeServiceTest {
         when(budgetRequestRepository.findById(requestId)).thenReturn(Optional.of(budgetRequest));
         when(budgetRequest.getUser()).thenReturn(user);
         when(user.getId()).thenReturn(userId);
-        when(budgetRequest.getStatus()).thenReturn("APPROVED");
-        when(budgetRequest.getReason()).thenReturn("동아리 장비 구매 신청");
+        when(budgetRequest.getStatus()).thenReturn("APPROVED");;
         when(budgetRequest.getRequestedAmount()).thenReturn(10000L);
 
         when(budgetService.findByRoomIdWithLock(roomId)).thenReturn(room);
@@ -78,7 +77,6 @@ public class BudgetChangeServiceTest {
         assertNotNull(response);
         assertEquals(10000L, response.changeBudget());
         assertEquals(8000L, response.changedBudget());
-        assertEquals("실제 장비 구매 영수증 첨부", response.changeReason());
         assertEquals(BudgetType.SETTLEMENT, response.budgetType());
 
         verify(room, times(1)).settleBudget(10000L, 8000L);
@@ -192,21 +190,20 @@ public class BudgetChangeServiceTest {
     }
 
     @Test
-    @DisplayName("예산 변경 내역 목록 조회 성공 - 본인의 변경 내역만 최신순으로 반환")
-    void budgetChangeList_success_onlyOwnChanges() {
+    @DisplayName("정산 내역 목록 조회 성공 - SETTLEMENT 타입의 내역만 최신순 반환")
+    void budgetChangeList_success() {
         // given
         Long roomId = 1L;
         Long userId = 100L;
 
         UserRoomConnection connection = mock(UserRoomConnection.class);
-        BudgetChange change1 = mock(BudgetChange.class);
-        BudgetChange change2 = mock(BudgetChange.class);
-        List<BudgetChange> ownBudgetChanges = List.of(change1, change2);
+        BudgetChange settlementChange1 = mock(BudgetChange.class);
+        BudgetChange settlementChange2 = mock(BudgetChange.class);
+        List<BudgetChange> settlementChanges = List.of(settlementChange1, settlementChange2);
 
-        // budgetChangeList 내부 모킹
         when(budgetService.validateRoomMember(roomId, userId)).thenReturn(connection);
-        when(budgetChangeRepository.findAllByRoomIdAndUserIdOrderByCreatedAtDesc(roomId, userId))
-                .thenReturn(ownBudgetChanges);
+        when(budgetChangeRepository.findAllByRoomIdAndTypeOrderByCreatedAtDesc(roomId, BudgetType.SETTLEMENT))
+                .thenReturn(settlementChanges);
 
         // when
         BudgetChangeListResponse response = budgetChangeService.budgetChangeList(roomId, userId);
@@ -214,16 +211,16 @@ public class BudgetChangeServiceTest {
         // then
         assertNotNull(response);
 
-        // 검증 1: 방 멤버 검증 호출
+        // 검증 1: 방 멤버 검증 호출 확인
         verify(budgetService, times(1)).validateRoomMember(roomId, userId);
 
-        // 검증 2: 정확히 파라미터로 전달된 본인의 userId 조건으로만 조회가 발생했는지 확인
+        // 검증 2: roomId와 BudgetType.SETTLEMENT 조건으로 조회가 발생했는지 확인
         verify(budgetChangeRepository, times(1))
-                .findAllByRoomIdAndUserIdOrderByCreatedAtDesc(eq(roomId), eq(userId));
+                .findAllByRoomIdAndTypeOrderByCreatedAtDesc(eq(roomId), eq(BudgetType.SETTLEMENT));
     }
 
     @Test
-    @DisplayName("예산 변경 내역 목록 조회 실패 - 방 멤버가 아닐 때")
+    @DisplayName("정산 내역 목록 조회 실패 - 방 멤버가 아닐 때")
     void budgetChangeList_userNotJoinedRoom() {
         // given
         Long roomId = 1L;
@@ -241,11 +238,11 @@ public class BudgetChangeServiceTest {
 
         // 검증: 멤버 검증 실패 시 DB 조회가 실행되지 않아야 함
         verify(budgetChangeRepository, never())
-                .findAllByRoomIdAndUserIdOrderByCreatedAtDesc(anyLong(), anyLong());
+                .findAllByRoomIdAndTypeOrderByCreatedAtDesc(anyLong(), any());
     }
 
     @Test
-    @DisplayName("예산 변경 내역 목록 조회 성공 - 본인의 변경 내역이 없는 경우 빈 리스트 반환")
+    @DisplayName("정산 내역 목록 조회 성공 - 정산 내역이 없는 경우 빈 리스트 반환")
     void budgetChangeList_emptyList() {
         // given
         Long roomId = 1L;
@@ -254,7 +251,7 @@ public class BudgetChangeServiceTest {
         UserRoomConnection connection = mock(UserRoomConnection.class);
 
         when(budgetService.validateRoomMember(roomId, userId)).thenReturn(connection);
-        when(budgetChangeRepository.findAllByRoomIdAndUserIdOrderByCreatedAtDesc(roomId, userId))
+        when(budgetChangeRepository.findAllByRoomIdAndTypeOrderByCreatedAtDesc(roomId, BudgetType.SETTLEMENT))
                 .thenReturn(Collections.emptyList());
 
         // when
@@ -265,6 +262,6 @@ public class BudgetChangeServiceTest {
 
         verify(budgetService, times(1)).validateRoomMember(roomId, userId);
         verify(budgetChangeRepository, times(1))
-                .findAllByRoomIdAndUserIdOrderByCreatedAtDesc(eq(roomId), eq(userId));
+                .findAllByRoomIdAndTypeOrderByCreatedAtDesc(eq(roomId), eq(BudgetType.SETTLEMENT));
     }
 }

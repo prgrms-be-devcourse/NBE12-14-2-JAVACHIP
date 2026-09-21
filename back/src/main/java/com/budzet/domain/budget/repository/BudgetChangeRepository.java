@@ -1,6 +1,7 @@
 package com.budzet.domain.budget.repository;
 
 import com.budzet.domain.budget.entity.BudgetChange;
+import com.budzet.domain.budget.entity.BudgetType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -8,5 +9,5 @@ import java.util.List;
 public interface BudgetChangeRepository extends JpaRepository<BudgetChange, Long> {
 
     List<BudgetChange> findAllByRoomIdOrderByCreatedAtDesc(Long roomId);
-    List<BudgetChange> findAllByRoomIdAndUserIdOrderByCreatedAtDesc(Long roomId, Long userId);
+    List<BudgetChange> findAllByRoomIdAndTypeOrderByCreatedAtDesc(Long roomId, BudgetType type);
 }
