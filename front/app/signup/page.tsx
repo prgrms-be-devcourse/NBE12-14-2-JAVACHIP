@@ -39,7 +39,7 @@ export default function SignupPage() {
       }
 
       alert("회원가입이 완료되었습니다.");
-      router.push("/login");
+      router.replace("/login");
     } catch (error) {
       console.error(error);
       setError("서버와 연결할 수 없습니다.");
