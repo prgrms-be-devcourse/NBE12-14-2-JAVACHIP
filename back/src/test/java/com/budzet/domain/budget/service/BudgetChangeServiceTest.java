@@ -2,6 +2,7 @@ package com.budzet.domain.budget.service;
 
 import com.budzet.domain.budget.dto.BudgetChangeCreateRequest;
 import com.budzet.domain.budget.dto.BudgetChangeCreateResponse;
+import com.budzet.domain.budget.dto.BudgetChangeListResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetRequest;
 import com.budzet.domain.budget.entity.BudgetType;
@@ -18,6 +19,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -184,5 +187,81 @@ public class BudgetChangeServiceTest {
 
         verify(budgetRequestRepository, never()).findById(any());
         verify(budgetChangeRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("정산 내역 목록 조회 성공 - SETTLEMENT 타입의 내역만 최신순 반환")
+    void budgetChangeList_success() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+
+        UserRoomConnection connection = mock(UserRoomConnection.class);
+        BudgetChange settlementChange1 = mock(BudgetChange.class);
+        BudgetChange settlementChange2 = mock(BudgetChange.class);
+        List<BudgetChange> settlementChanges = List.of(settlementChange1, settlementChange2);
+
+        when(budgetService.validateRoomMember(roomId, userId)).thenReturn(connection);
+        when(budgetChangeRepository.findAllByRoomIdAndTypeOrderByCreatedAtDesc(roomId, BudgetType.SETTLEMENT))
+                .thenReturn(settlementChanges);
+
+        // when
+        BudgetChangeListResponse response = budgetChangeService.budgetChangeList(roomId, userId);
+
+        // then
+        assertNotNull(response);
+
+        // 검증 1: 방 멤버 검증 호출 확인
+        verify(budgetService, times(1)).validateRoomMember(roomId, userId);
+
+        // 검증 2: roomId와 BudgetType.SETTLEMENT 조건으로 조회가 발생했는지 확인
+        verify(budgetChangeRepository, times(1))
+                .findAllByRoomIdAndTypeOrderByCreatedAtDesc(eq(roomId), eq(BudgetType.SETTLEMENT));
+    }
+
+    @Test
+    @DisplayName("정산 내역 목록 조회 실패 - 방 멤버가 아닐 때")
+    void budgetChangeList_userNotJoinedRoom() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+
+        // 멤버 검증 시 예외 발생 모킹
+        when(budgetService.validateRoomMember(roomId, userId))
+                .thenThrow(new BusinessException(null, "사용자가 방에 속해있지 않습니다."));
+
+        // when & then
+        assertThrows(
+                BusinessException.class,
+                () -> budgetChangeService.budgetChangeList(roomId, userId)
+        );
+
+        // 검증: 멤버 검증 실패 시 DB 조회가 실행되지 않아야 함
+        verify(budgetChangeRepository, never())
+                .findAllByRoomIdAndTypeOrderByCreatedAtDesc(anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("정산 내역 목록 조회 성공 - 정산 내역이 없는 경우 빈 리스트 반환")
+    void budgetChangeList_emptyList() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+
+        UserRoomConnection connection = mock(UserRoomConnection.class);
+
+        when(budgetService.validateRoomMember(roomId, userId)).thenReturn(connection);
+        when(budgetChangeRepository.findAllByRoomIdAndTypeOrderByCreatedAtDesc(roomId, BudgetType.SETTLEMENT))
+                .thenReturn(Collections.emptyList());
+
+        // when
+        BudgetChangeListResponse response = budgetChangeService.budgetChangeList(roomId, userId);
+
+        // then
+        assertNotNull(response);
+
+        verify(budgetService, times(1)).validateRoomMember(roomId, userId);
+        verify(budgetChangeRepository, times(1))
+                .findAllByRoomIdAndTypeOrderByCreatedAtDesc(eq(roomId), eq(BudgetType.SETTLEMENT));
     }
 }

@@ -164,6 +164,7 @@ public class BudgetServiceTest {
         Long userId = 100L;
         BudgetChange budgetChange = mock(BudgetChange.class);
         UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
+        Room room = mock(Room.class);
         LocalDateTime now = LocalDateTime.now();
 
         when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
@@ -171,6 +172,8 @@ public class BudgetServiceTest {
 
         when(budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId))
                 .thenReturn(List.of(budgetChange));
+        when(roomRepository.findById(roomId))
+                .thenReturn(Optional.of(room));
 
         when(budgetChange.getId()).thenReturn(10L);
         when(budgetChange.getChangedBudget()).thenReturn(8000L);
@@ -211,6 +214,9 @@ public class BudgetServiceTest {
 
         when(budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId))
                 .thenReturn(Collections.emptyList());
+
+        when(roomRepository.findById(roomId))
+                .thenReturn(Optional.of(room));
 
         //when
         BudgetHistoryResponse result = budgetService.getBudgetHistory(roomId, userId);

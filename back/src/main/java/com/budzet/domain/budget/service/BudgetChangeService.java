@@ -2,6 +2,7 @@ package com.budzet.domain.budget.service;
 
 import com.budzet.domain.budget.dto.BudgetChangeCreateRequest;
 import com.budzet.domain.budget.dto.BudgetChangeCreateResponse;
+import com.budzet.domain.budget.dto.BudgetChangeListResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetRequest;
 import com.budzet.domain.budget.entity.BudgetType;
@@ -15,6 +16,8 @@ import com.budzet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -73,5 +76,16 @@ public class BudgetChangeService {
         budgetChangeRepository.save(budgetChange);
 
         return BudgetChangeCreateResponse.from(budgetChange);
+    }
+
+    @Transactional(readOnly = true)
+    public BudgetChangeListResponse budgetChangeList(Long roomId, Long userId){
+
+        budgetService.validateRoomMember(roomId,userId);
+
+        List<BudgetChange> budgetChanges =
+                budgetChangeRepository.findAllByRoomIdAndTypeOrderByCreatedAtDesc(roomId, BudgetType.SETTLEMENT);
+
+        return BudgetChangeListResponse.from(budgetChanges);
     }
 }
