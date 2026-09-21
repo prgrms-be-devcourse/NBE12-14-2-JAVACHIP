@@ -45,4 +45,8 @@ public class UserRoomConnection {
     public static UserRoomConnection createOwner(User user, Room room) {
         return new UserRoomConnection(user, room, Authority.OWNER, true);
     }
+
+    public static UserRoomConnection createMember(User user, Room room) {
+        return new UserRoomConnection(user, room, Authority.MEMBER, true);
+    }
 }
