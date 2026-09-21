@@ -67,22 +67,49 @@ public class Room {
         this.name = name;
     }
 
+    public void addBudgetChange(BudgetChange budgetChange){
+        this.budgetChanges.add(budgetChange);
+    }
+
     public Room updateTotalBudget(Long changedBudget, BudgetType type) {
         if(changedBudget == null || changedBudget <= 0 ){
             throw new BusinessException(ErrorCode.BAD_REQUEST,"입력된 금액이 올바르지 않습니다.");
         }
-
         if (type == BudgetType.INCREASE) {
             this.totalBudget = this.totalBudget + changedBudget;
             this.availableBudget = this.availableBudget + changedBudget;
-        }else if(type == BudgetType.DECREASE || type == BudgetType.SETTLEMENT){
 
+        }else if(type == BudgetType.DECREASE){
             if(availableBudget < changedBudget){
                 throw new BusinessException(ErrorCode.BUDGET_EXCEEDED);
             }
             this.totalBudget = this.totalBudget - changedBudget;
             this.availableBudget = this.availableBudget - changedBudget;
+
         }
         return this;
     }
-}
+
+    public Room settleBudget(Long requestedAmount, Long changedBudget){
+
+            if(changedBudget == null || changedBudget <= 0 ){
+                throw new BusinessException(ErrorCode.BAD_REQUEST,"입력된 금액이 올바르지 않습니다.");
+            }
+
+            if(this.totalBudget < changedBudget){
+                throw new BusinessException(ErrorCode.BUDGET_EXCEEDED,"실제예산을 초과하여 정산할 수 없습니다..");
+            }
+
+            // 승인 금액 이상으로 정산 처리할 경우 예외처리
+            if(changedBudget > requestedAmount) {
+                throw new BusinessException(ErrorCode.SETTLEMENT_AMOUNT_EXCEEDS_APPROVED);
+            }
+
+            //정산금액 처리
+            Long balanceBudget = requestedAmount - changedBudget; //잔액 = 신청 승인된 금액 - 실제 사용 금액
+            this.totalBudget = this.totalBudget - changedBudget;  //실제 예산 - 정산 금액
+            this.availableBudget = this.availableBudget + balanceBudget;  //가용 예산 + 잔액
+
+            return this;
+        }
+    }
