@@ -11,10 +11,16 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
         use_sql_comments: true
+
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:db/local-data.sql
 
 logging:
   level:
