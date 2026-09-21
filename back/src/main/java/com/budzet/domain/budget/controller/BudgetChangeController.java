@@ -54,14 +54,14 @@ public class BudgetChangeController {
         return ApiResponse.response(HttpStatus.OK,"정산 내역 상세조회 성공",response);
     }
 
-    @PatchMapping("/{roomId}/budget/changes/{changeId}")
+    @PutMapping("/{roomId}/budget/changes/{changeId}")
     public ResponseEntity<ApiResponse<BudgetChangeUpdateResponse>> updateBudgetChange(
             @PathVariable Long roomId,
             @PathVariable Long changeId,
             @RequestBody @Valid BudgetChangeUpdateRequest request
     ){
         User user = rq.getActor();
-        BudgetChangeUpdateResponse response = budgetChangeService.UpdateBudgetChange(
+        BudgetChangeUpdateResponse response = budgetChangeService.updateBudgetChange(
                 roomId, user.getId(), changeId, request);
 
         return ApiResponse.response(HttpStatus.OK,"정산 내역 수정 성공",response);

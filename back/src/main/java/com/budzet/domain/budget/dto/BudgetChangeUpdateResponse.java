@@ -6,7 +6,6 @@ public record BudgetChangeUpdateResponse(
         Long id,
         Long changeBudget,
         Long changedBudget,
-        String changeReason,
         String userName,
         String userEmail,
         String reason
@@ -16,7 +15,6 @@ public record BudgetChangeUpdateResponse(
                 budgetChange.getId(),
                 budgetChange.getChangeBudget(),
                 budgetChange.getChangedBudget(),
-                budgetChange.getChangeReason(),
                 budgetChange.getUserName(),
                 budgetChange.getUser().getEmail(),
                 budgetChange.getReason()
