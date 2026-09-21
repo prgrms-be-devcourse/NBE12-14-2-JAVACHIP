@@ -300,4 +300,47 @@ public class BudgetControllerTest {
                 .andExpect(jsonPath("$.message").value("정산 내역 조회 성공"))
                 .andExpect(jsonPath("$.data.changes").isEmpty());
     }
+
+    @Test
+    @DisplayName("정산 내역 상세 조회 성공 - 200 OK")
+    void getBudgetChangeDetail_success() throws Exception {
+        // given
+        Long roomId = 1L;
+        Long changeId = 50L;
+        Long userId = 30L;
+        LocalDateTime now = LocalDateTime.now();
+
+        BudgetChange budgetChange = mock(BudgetChange.class);
+        BudgetRequest budgetRequest = mock(BudgetRequest.class);
+        User user = mock(User.class);
+        Room room = mock(Room.class);
+
+        given(user.getId()).willReturn(userId);
+        given(room.getId()).willReturn(roomId);
+        given(budgetRequest.getId()).willReturn(10L);
+
+        given(budgetChange.getRoom()).willReturn(room);
+        given(budgetChange.getId()).willReturn(changeId);
+        given(budgetChange.getRequest()).willReturn(budgetRequest);
+        given(budgetChange.getUser()).willReturn(user);
+        given(budgetChange.getChangeBudget()).willReturn(5000L);
+        given(budgetChange.getChangedBudget()).willReturn(9500L);
+        given(budgetChange.getType()).willReturn(BudgetType.SETTLEMENT);
+        given(budgetChange.getUserName()).willReturn("홍길동");
+        given(budgetChange.getCreatedAt()).willReturn(now);
+        given(budgetChange.getReason()).willReturn("팀 회식 신청");
+
+        BudgetChangeDetailResponse response = BudgetChangeDetailResponse.from(budgetChange);
+
+        given(budgetChangeService.budgetChangeDetail(eq(roomId), eq(testUserId), eq(changeId)))
+                .willReturn(response);
+
+        // when & then
+        mvc.perform(get("/rooms/{roomId}/budget/changes/{changeId}", roomId, changeId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value(200))
+                .andExpect(jsonPath("$.message").value("정산 내역 상세조회 성공"))
+                .andExpect(jsonPath("$.data.id").value(changeId));
+    }
 }

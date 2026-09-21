@@ -2,6 +2,7 @@ package com.budzet.domain.budget.service;
 
 import com.budzet.domain.budget.dto.BudgetChangeCreateRequest;
 import com.budzet.domain.budget.dto.BudgetChangeCreateResponse;
+import com.budzet.domain.budget.dto.BudgetChangeDetailResponse;
 import com.budzet.domain.budget.dto.BudgetChangeListResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetRequest;
@@ -12,6 +13,7 @@ import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.user.entity.User;
 import com.budzet.global.exception.BusinessException;
+import com.budzet.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -263,5 +265,84 @@ public class BudgetChangeServiceTest {
         verify(budgetService, times(1)).validateRoomMember(roomId, userId);
         verify(budgetChangeRepository, times(1))
                 .findAllByRoomIdAndTypeOrderByCreatedAtDesc(eq(roomId), eq(BudgetType.SETTLEMENT));
+    }
+
+    @Test
+    @DisplayName("예산 변경 내역 상세 조회 성공")
+    void budgetChangeDetail_success() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+        Long changeId = 50L;
+        Long requestId = 30L;
+
+        UserRoomConnection connection = mock(UserRoomConnection.class);
+        BudgetChange budgetChange = mock(BudgetChange.class);
+        Room room = mock(Room.class);
+        User user = mock(User.class);
+        BudgetRequest request = mock(BudgetRequest.class);
+
+        when(budgetService.validateRoomMember(roomId, userId)).thenReturn(connection);
+        when(budgetChangeRepository.findById(changeId)).thenReturn(Optional.of(budgetChange));
+        when(budgetChange.getRoom()).thenReturn(room);
+        when(room.getId()).thenReturn(roomId);
+        when(budgetChange.getUser()).thenReturn(user);
+        when(user.getId()).thenReturn(userId);
+        when(budgetChange.getRequest()).thenReturn(request);
+        when(request.getId()).thenReturn(requestId);
+
+        // when
+        BudgetChangeDetailResponse response = budgetChangeService.budgetChangeDetail(roomId, userId, changeId);
+
+        // then
+        assertNotNull(response);
+
+        verify(budgetService, times(1)).validateRoomMember(roomId, userId);
+        verify(budgetChangeRepository, times(1)).findById(changeId);
+    }
+
+    @Test
+    @DisplayName("예산 변경 내역 상세 조회 실패 - 해당 내역이 존재하지 않을 때")
+    void budgetChangeDetail_notFound() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+        Long changeId = 999L;
+
+        UserRoomConnection connection = mock(UserRoomConnection.class);
+
+        when(budgetService.validateRoomMember(roomId, userId)).thenReturn(connection);
+        when(budgetChangeRepository.findById(changeId)).thenReturn(Optional.empty());
+
+        // when & then
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> budgetChangeService.budgetChangeDetail(roomId, userId, changeId)
+        );
+
+        assertEquals(ErrorCode.BUDGET_CHANGE_NOT_FOUND, exception.getErrorCode());
+
+        verify(budgetService, times(1)).validateRoomMember(roomId, userId);
+        verify(budgetChangeRepository, times(1)).findById(changeId);
+    }
+
+    @Test
+    @DisplayName("예산 변경 내역 상세 조회 실패 - 방 멤버가 아닐 때")
+    void budgetChangeDetail_userNotJoinedRoom() {
+        // given
+        Long roomId = 1L;
+        Long userId = 100L;
+        Long changeId = 50L;
+
+        when(budgetService.validateRoomMember(roomId, userId))
+                .thenThrow(new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM));
+
+        // when & then
+        assertThrows(
+                BusinessException.class,
+                () -> budgetChangeService.budgetChangeDetail(roomId, userId, changeId)
+        );
+
+        verify(budgetChangeRepository, never()).findById(anyLong());
     }
 }
