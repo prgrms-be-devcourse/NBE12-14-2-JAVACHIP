@@ -31,6 +31,14 @@ function RoomCard({ room }: { room: Room }) {
   </article>;
 }
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof ApiError && error.status === 401) {
+    return null;
+  }
+
+  return error instanceof ApiError ? error.message : "모임 목록을 불러오지 못했습니다.";
+}
+
 export default function RoomListPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +50,7 @@ export default function RoomListPage() {
     try {
       setRooms(await getRooms());
     } catch (caughtError) {
-      setError(caughtError instanceof ApiError ? caughtError.message : "모임 목록을 불러오지 못했습니다.");
+      setError(getErrorMessage(caughtError));
     } finally {
       setLoading(false);
     }
@@ -59,7 +67,7 @@ export default function RoomListPage() {
       })
       .catch((caughtError: unknown) => {
         if (!cancelled) {
-          setError(caughtError instanceof ApiError ? caughtError.message : "모임 목록을 불러오지 못했습니다.");
+          setError(getErrorMessage(caughtError));
         }
       })
       .finally(() => {
