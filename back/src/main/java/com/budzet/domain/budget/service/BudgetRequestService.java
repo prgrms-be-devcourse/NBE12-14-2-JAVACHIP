@@ -2,8 +2,11 @@ package com.budzet.domain.budget.service;
 
 import com.budzet.domain.budget.dto.BudgetRequestResponse;
 import com.budzet.domain.budget.entity.BudgetRequest;
+import com.budzet.domain.budget.entity.BudgetRequestType;
 import com.budzet.domain.budget.repository.BudgetRequestRepository;
+import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.Room;
+import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.entity.UserRoomConnectionId;
 import com.budzet.domain.room.repository.RoomRepository;
 import com.budzet.domain.room.repository.UserRoomConnectionRepository;
@@ -12,6 +15,7 @@ import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -98,6 +102,30 @@ public class BudgetRequestService {
             throw new BusinessException(ErrorCode.NOT_BUDGET_REQUESTER);
         else
             budgetRequestRepository.deleteById(requestId);
+    }
+
+    /**
+     * 예산신청 승인
+     * @param roomId
+     * @param user
+     * @param requestId
+     */
+    @Transactional
+    public void approveBudgetRequest(Long roomId, User user, Long requestId){
+
+        userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
+
+        // 권한 확인
+        UserRoomConnection userRoomConnection =  userRoomConnectionRepository.findByUser_IdAndRoom_Id(user.getId(), roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM));
+        if(userRoomConnection.getAuthority() != Authority.OPERATOR)
+            throw new BusinessException(ErrorCode.OWNER_REQUIRED);
+
+
+        BudgetRequest budgetRequest = budgetRequestRepository.findByIdAndRoomId(requestId, roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_FOUND));
+
+        budgetRequest.updateState(BudgetRequestType.APPROVE);
     }
 
 }
