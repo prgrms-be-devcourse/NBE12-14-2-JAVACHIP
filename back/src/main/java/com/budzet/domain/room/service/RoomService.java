@@ -138,4 +138,36 @@ public class RoomService {
 
         targetConnection.changeAuthority(request.authority());
     }
+
+    @Transactional
+    public void delegateOwner(
+            Long actorId,
+            Long roomId,
+            Long targetUserId
+    ) {
+        UserRoomConnection actorConnection =
+                userRoomConnectionRepository
+                        .findByUser_IdAndRoom_Id(actorId, roomId)
+                        .orElseThrow(() -> new BusinessException(
+                                ErrorCode.MEMBER_NOT_FOUND
+                        ));
+
+        if (actorConnection.getAuthority() != Authority.OWNER) {
+            throw new BusinessException(ErrorCode.OWNER_REQUIRED);
+        }
+
+        UserRoomConnection targetConnection =
+                userRoomConnectionRepository
+                        .findByUser_IdAndRoom_Id(targetUserId, roomId)
+                        .orElseThrow(() -> new BusinessException(
+                                ErrorCode.MEMBER_NOT_FOUND
+                        ));
+
+        if (targetConnection.getAuthority() == Authority.OWNER) {
+            throw new BusinessException(ErrorCode.OWNER_REQUIRED);
+        }
+
+        actorConnection.changeAuthority(Authority.MEMBER);
+        targetConnection.changeAuthority(Authority.OWNER);
+    }
 }

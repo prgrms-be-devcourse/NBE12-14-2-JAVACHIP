@@ -120,4 +120,24 @@ public class RoomController {
                 null
         );
     }
+
+    @PatchMapping("/{roomId}/members/{userId}/owner")
+    public ResponseEntity<ApiResponse<Void>> delegateOwner(
+            @PathVariable Long roomId,
+            @PathVariable Long userId
+    ) {
+        Long actorId = rq.getActor().getId();
+
+        roomService.delegateOwner(
+                actorId,
+                roomId,
+                userId
+        );
+
+        return ApiResponse.response(
+                HttpStatus.OK,
+                "모임장 권한이 위임되었습니다.",
+                null
+        );
+    }
 }

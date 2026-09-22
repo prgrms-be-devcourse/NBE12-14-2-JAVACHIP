@@ -339,4 +339,145 @@ class RoomServiceTest {
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.OWNER_REQUIRED);
         verify(roomRepository, never()).delete(any(Room.class));
     }
+
+    @Test
+    @DisplayName("모임장은 다른 모임원에게 모임장 권한을 위임할 수 있다.")
+    void delegateOwner_changesOwnerToMemberAndTargetToOwner() {
+        Long actorId = 1L;
+        Long roomId = 10L;
+        Long targetUserId = 2L;
+
+        UserRoomConnection actorConnection = mock(UserRoomConnection.class);
+        UserRoomConnection targetConnection = mock(UserRoomConnection.class);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(
+                actorId, roomId
+        )).thenReturn(Optional.of(actorConnection));
+
+        when(actorConnection.getAuthority()).thenReturn(Authority.OWNER);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(
+                targetUserId, roomId
+        )).thenReturn(Optional.of(targetConnection));
+
+        when(targetConnection.getAuthority()).thenReturn(Authority.MEMBER);
+
+        roomService.delegateOwner(
+                actorId,
+                roomId,
+                targetUserId
+        );
+
+        verify(actorConnection).changeAuthority(Authority.MEMBER);
+        verify(targetConnection).changeAuthority(Authority.OWNER);
+    }
+
+    @Test
+    @DisplayName("모임원이 모임장 권한을 위임하려 하면, 에러 발생")
+    void delegateOwner_throwsForbiddenExceptionWhenUserIsNotOwner() {
+        Long actorId = 1L;
+        Long roomId = 10L;
+        Long targetUserId = 2L;
+
+        UserRoomConnection actorConnection = mock(UserRoomConnection.class);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(
+                actorId, roomId
+        )).thenReturn(Optional.of(actorConnection));
+
+        when(actorConnection.getAuthority()).thenReturn(Authority.MEMBER);
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> roomService.delegateOwner(
+                        actorId,
+                        roomId,
+                        targetUserId
+                )
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(
+                ErrorCode.OWNER_REQUIRED
+        );
+
+        verify(userRoomConnectionRepository, never())
+                .findByUser_IdAndRoom_Id(targetUserId, roomId);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 멤버에게 모임장 권한을 위임하려 하면, 에러 발생")
+    void delegateOwner_throwsNotFoundExceptionWhenTargetMemberDoesNotExist() {
+        Long actorId = 1L;
+        Long roomId = 10L;
+        Long targetUserId = 2L;
+
+        UserRoomConnection actorConnection = mock(UserRoomConnection.class);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(
+                actorId, roomId
+        )).thenReturn(Optional.of(actorConnection));
+
+        when(actorConnection.getAuthority()).thenReturn(Authority.OWNER);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(
+                targetUserId, roomId
+        )).thenReturn(Optional.empty());
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> roomService.delegateOwner(
+                        actorId,
+                        roomId,
+                        targetUserId
+                )
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(
+                ErrorCode.MEMBER_NOT_FOUND
+        );
+
+        verify(actorConnection, never())
+                .changeAuthority(any(Authority.class));
+    }
+
+    @Test
+    @DisplayName("이미 모임장인 멤버에게 모임장 권한을 위임하려 하면, 에러 발생")
+    void delegateOwner_throwsExceptionWhenTargetIsAlreadyOwner() {
+        Long actorId = 1L;
+        Long roomId = 10L;
+        Long targetUserId = 2L;
+
+        UserRoomConnection actorConnection = mock(UserRoomConnection.class);
+        UserRoomConnection targetConnection = mock(UserRoomConnection.class);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(
+                actorId, roomId
+        )).thenReturn(Optional.of(actorConnection));
+
+        when(actorConnection.getAuthority()).thenReturn(Authority.OWNER);
+
+        when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(
+                targetUserId, roomId
+        )).thenReturn(Optional.of(targetConnection));
+
+        when(targetConnection.getAuthority()).thenReturn(Authority.OWNER);
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> roomService.delegateOwner(
+                        actorId,
+                        roomId,
+                        targetUserId
+                )
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(
+                ErrorCode.OWNER_REQUIRED
+        );
+
+        verify(actorConnection, never())
+                .changeAuthority(any(Authority.class));
+        verify(targetConnection, never())
+                .changeAuthority(any(Authority.class));
+    }
 }
