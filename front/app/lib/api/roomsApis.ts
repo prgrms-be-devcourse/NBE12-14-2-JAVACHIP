@@ -26,6 +26,10 @@ export async function getRooms() {
   return data.rooms;
 }
 
+export function getRoom(roomId: number) {
+  return apiFetch<Room>(`/rooms/${roomId}`);
+}
+
 export function createRoom(request: CreateRoomRequest) {
   return apiFetch<Room>("/rooms", {
     method: "POST",
