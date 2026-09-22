@@ -13,10 +13,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -53,6 +50,22 @@ public class UserController {
                 HttpStatus.OK,
                 "로그인에 성공했습니다.",
                 response
+        );
+    }
+
+    @DeleteMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(){
+        User actor = rq.getActor();
+
+        userService.logout(actor.getId());
+
+        rq.deleteCookie("accessToken");
+        rq.deleteCookie("refreshToken");
+
+        return ApiResponse.response(
+                HttpStatus.OK,
+                "로그아웃되었습니다.",
+                null
         );
     }
 

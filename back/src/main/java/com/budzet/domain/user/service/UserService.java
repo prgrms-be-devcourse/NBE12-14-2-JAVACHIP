@@ -53,6 +53,15 @@ public class UserService {
     }
 
     @Transactional
+    public void logout(Long userId){
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+        );
+
+        user.clearRefreshToken();
+    }
+
+    @Transactional
     public TokenRefreshResponse refresh(String refreshToken){
         Map<String, Object> payload = authTokenService.refreshPayloadOrNull(refreshToken);
 
