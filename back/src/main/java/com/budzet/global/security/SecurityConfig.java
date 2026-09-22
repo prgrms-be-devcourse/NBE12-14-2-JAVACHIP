@@ -18,7 +18,7 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http, CustomAuthenticationFilter customAuthenticationFilter) throws Exception {
         http
                 .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
-                        .requestMatchers("/users/join", "/users/login").permitAll()
+                        .requestMatchers("/users/join", "/users/login", "/users/refresh").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -34,6 +34,7 @@ public class SecurityConfig {
                                             """
                                                     {
                                                         "resultCode": "401",
+                                                        "errorCode": "UNAUTHORIZED",
                                                         "message": "로그인 후 이용해주세요."
                                                     }
                                                     """
@@ -46,6 +47,7 @@ public class SecurityConfig {
                                             """
                                                     {
                                                         "resultCode": "403",
+                                                        "errorCode": "FORBIDDEN"
                                                         "message": "권한이 없습니다."
                                                     }
                                                     """

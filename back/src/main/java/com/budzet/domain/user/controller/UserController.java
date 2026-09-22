@@ -1,9 +1,6 @@
 package com.budzet.domain.user.controller;
 
-import com.budzet.domain.user.dto.UserDto;
-import com.budzet.domain.user.dto.UserJoinRequest;
-import com.budzet.domain.user.dto.UserLoginRequest;
-import com.budzet.domain.user.dto.UserLoginResponse;
+import com.budzet.domain.user.dto.*;
 import com.budzet.domain.user.entity.User;
 import com.budzet.domain.user.service.UserService;
 import com.budzet.global.api.ApiResponse;
@@ -56,6 +53,38 @@ public class UserController {
                 HttpStatus.OK,
                 "로그인에 성공했습니다.",
                 response
+        );
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refresh( ){
+        String headerAuthorization = rq.getHeader("Authorization", "");
+
+        String refreshToken = null;
+
+        if(!headerAuthorization.isBlank()){
+            if(!headerAuthorization.startsWith("Bearer ")){
+                throw new BusinessException(ErrorCode.INVALID_AUTHORIZATION_HEADER);
+            }
+
+            refreshToken = headerAuthorization.substring(7);
+        }else {
+            refreshToken = rq.getCookieValue("refreshToken", "");
+        }
+
+        if(refreshToken.isBlank()){
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        TokenRefreshResponse tokenResponse = userService.refresh(refreshToken);
+
+        rq.addCookie("accessToken", tokenResponse.accessToken());
+        rq.addCookie("refreshToken", tokenResponse.refreshToken());
+
+        return ApiResponse.response(
+                HttpStatus.OK,
+                "토큰 재발급 성공",
+                tokenResponse
         );
     }
 

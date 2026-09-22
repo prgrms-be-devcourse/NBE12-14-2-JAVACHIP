@@ -1,5 +1,6 @@
 package com.budzet.domain.user.service;
 
+import com.budzet.domain.user.dto.TokenRefreshResponse;
 import com.budzet.domain.user.dto.UserLoginResponse;
 import com.budzet.domain.user.entity.User;
 import com.budzet.domain.user.repository.UserRepository;
@@ -49,6 +50,32 @@ public class UserService {
                 accessToken,
                 refreshToken
         );
+    }
+
+    @Transactional
+    public TokenRefreshResponse refresh(String refreshToken){
+        Map<String, Object> payload = authTokenService.refreshPayloadOrNull(refreshToken);
+
+        if(payload == null){
+            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        Long userId = ((Number)payload.get("id")).longValue();
+
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+        );
+
+        if(user.getRefreshToken() == null || !user.getRefreshToken().equals(refreshToken)){
+            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        String newAccessToken = authTokenService.genAccessToken(user);
+        String newRefreshToken = authTokenService.genRefreshToken(user);
+
+        user.updateRefreshToken(newRefreshToken);
+
+        return TokenRefreshResponse.from(newAccessToken, newRefreshToken);
     }
 
     public void checkPassword(String inputPassword, String encodedPassword) {

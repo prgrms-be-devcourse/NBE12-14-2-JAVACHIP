@@ -30,7 +30,9 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return List.of("/users/join", "/users/login")
+        return List.of("/users/join",
+                        "/users/login",
+                        "/users/refresh")
                 .contains(request.getRequestURI());
     }
 
@@ -48,9 +50,10 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                     """
                             {
                                 "resultCode": "%s",
+                                "errorCode": "%s",
                                 "message": "%s"
                             }
-                            """.formatted(errorCode.getStatus().value(), errorCode.getMessage())
+                            """.formatted(errorCode.getStatus().value(), errorCode.name(), errorCode.getMessage())
             );
         }
     }
@@ -63,7 +66,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         if (!headerAuthorization.isBlank()) {
 
             if (!headerAuthorization.startsWith("Bearer ")) {
-                throw new BusinessException(ErrorCode.INVALID_ACCESS_TOKEN);
+                throw new BusinessException(ErrorCode.INVALID_AUTHORIZATION_HEADER);
             }
 
             accessToken = headerAuthorization.substring(7);

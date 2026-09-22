@@ -25,6 +25,6 @@ logging:
 custom:
   jwt:
     access-secret: ${ACCESS_SECRET}
-    access-expire-millis: "#{1000L * 60 * 60}"
+    access-expire-millis: "#{1000L * 60}" #1분
     refresh-secret: ${REFRESH_SECRET}
-    refresh-expire-millis: "#{1000L * 60 * 60 * 24 * 7}"
+    refresh-expire-millis: "#{1000L * 60 * 3}" #3분
