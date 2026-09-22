@@ -57,17 +57,28 @@ public class BudgetRequest {
         this.userName = user.getName();
         this.reason = reason;
         this.requestedAmount = requestedAmount;
+        this.status = BudgetRequestType.REQUEST.name();
     }
+
     //todo 신청 상태 enum으로 변경 시 수정
     public void changeToSettlement(String status) {
         if (!"APPROVED".equals(this.status)) {
             throw new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_APPROVED);
         }
     }
+
     public void updateRequest(BudgetChange budgetChange, User user){
         this.user = user;
         this.userName = budgetChange.getUserName();
         this.reason = budgetChange.getReason();
         this.requestedAmount = budgetChange.getChangeBudget();
     }
+
+    public void updateState(BudgetRequestType type){
+        if(this.status == BudgetRequestType.REQUEST.name() || this.status == BudgetRequestType.REJECT.name())
+            this.status = type.name();
+        else
+            throw new BusinessException(ErrorCode.NOT_APPROVABLE);
+    }
+
 }
