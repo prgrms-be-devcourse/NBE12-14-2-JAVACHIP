@@ -1,18 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { createInvite } from "../lib/api/inviteApi";
 
 interface CreateInviteButtonProps {
   roomId: number;
-}
-
-interface InviteResponse {
-  code: string;
-  expireAt: string;
-}
-
-interface ApiResponse {
-  data: InviteResponse;
 }
 
 export default function CreateInviteButton({
@@ -25,27 +17,17 @@ export default function CreateInviteButton({
     try {
       setLoading(true);
 
-      const response = await fetch(
-        `http://localhost:8080/rooms/${roomId}/invites`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        alert(`초대 링크 생성 실패 (${response.status})`);
-        return;
-      }
-
-      const result: ApiResponse = await response.json();
-
-      const url = `${window.location.origin}/invite/${result.data.code}`;
+      const invite = await createInvite(roomId);
+      const url = `${window.location.origin}/invite/${invite.code}`;
 
       setInviteUrl(url);
     } catch (error) {
       console.error("초대 링크 생성 실패:", error);
-      alert("서버 요청에 실패했습니다.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "초대 링크 생성에 실패했습니다.",
+      );
     } finally {
       setLoading(false);
     }
