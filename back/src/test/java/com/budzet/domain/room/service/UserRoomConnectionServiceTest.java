@@ -5,6 +5,7 @@ import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.UserRoomConnection;
 import com.budzet.domain.room.repository.UserRoomConnectionRepository;
 import com.budzet.global.exception.BusinessException;
+import com.budzet.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -120,25 +121,144 @@ class UserRoomConnectionServiceTest {
     }
 
     @Test
-    @DisplayName("멤버 강퇴 성공")
-    void kickMember_success() {
+    @DisplayName("OWNER가 멤버를 강퇴할 수 있다")
+    void kickMember_owner_success() {
 
-        UserRoomConnection connection =
+        UserRoomConnection actorConnection =
+                mock(UserRoomConnection.class);
+
+        UserRoomConnection targetConnection =
                 mock(UserRoomConnection.class);
 
         when(userRoomConnectionRepository
-                .findByUser_IdAndRoom_Id(2L, 1L))
-                .thenReturn(Optional.of(connection));
+                .findByUser_IdAndRoom_Id(1L, 1L))
+                .thenReturn(Optional.of(actorConnection));
 
-        userRoomConnectionService.kickMember(1L, 2L);
+        when(actorConnection.getAuthority())
+                .thenReturn(Authority.OWNER);
+
+        when(userRoomConnectionRepository
+                .findByUser_IdAndRoom_Id(2L, 1L))
+                .thenReturn(Optional.of(targetConnection));
+
+        userRoomConnectionService.kickMember(
+                1L,
+                1L,
+                2L
+        );
 
         verify(userRoomConnectionRepository)
-                .delete(connection);
+                .delete(targetConnection);
+    }
+
+    @Test
+    @DisplayName("OPERATOR가 멤버를 강퇴할 수 있다")
+    void kickMember_operator_success() {
+
+        UserRoomConnection actorConnection =
+                mock(UserRoomConnection.class);
+
+        UserRoomConnection targetConnection =
+                mock(UserRoomConnection.class);
+
+        when(userRoomConnectionRepository
+                .findByUser_IdAndRoom_Id(1L, 1L))
+                .thenReturn(Optional.of(actorConnection));
+
+        when(actorConnection.getAuthority())
+                .thenReturn(Authority.OPERATOR);
+
+        when(userRoomConnectionRepository
+                .findByUser_IdAndRoom_Id(2L, 1L))
+                .thenReturn(Optional.of(targetConnection));
+
+        userRoomConnectionService.kickMember(
+                1L,
+                1L,
+                2L
+        );
+
+        verify(userRoomConnectionRepository)
+                .delete(targetConnection);
+    }
+
+    @Test
+    @DisplayName("MEMBER는 멤버를 강퇴할 수 없다")
+    void kickMember_member_forbidden() {
+
+        UserRoomConnection actorConnection =
+                mock(UserRoomConnection.class);
+
+        when(userRoomConnectionRepository
+                .findByUser_IdAndRoom_Id(1L, 1L))
+                .thenReturn(Optional.of(actorConnection));
+
+        when(actorConnection.getAuthority())
+                .thenReturn(Authority.MEMBER);
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> userRoomConnectionService.kickMember(
+                        1L,
+                        1L,
+                        2L
+                )
+        );
+
+        assertThat(exception.getErrorCode())
+                .isEqualTo(ErrorCode.ROOM_MANAGER_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("OWNER는 강퇴할 수 없다")
+    void kickMember_ownerTarget_forbidden() {
+
+        UserRoomConnection actorConnection =
+                mock(UserRoomConnection.class);
+
+        UserRoomConnection targetConnection =
+                mock(UserRoomConnection.class);
+
+        when(userRoomConnectionRepository
+                .findByUser_IdAndRoom_Id(1L, 1L))
+                .thenReturn(Optional.of(actorConnection));
+
+        when(actorConnection.getAuthority())
+                .thenReturn(Authority.OPERATOR);
+
+        when(userRoomConnectionRepository
+                .findByUser_IdAndRoom_Id(2L, 1L))
+                .thenReturn(Optional.of(targetConnection));
+
+        when(targetConnection.getAuthority())
+                .thenReturn(Authority.OWNER);
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> userRoomConnectionService.kickMember(
+                        1L,
+                        1L,
+                        2L
+                )
+        );
+
+        assertThat(exception.getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_AUTHORITY);
     }
 
     @Test
     @DisplayName("존재하지 않는 멤버 강퇴 시 예외 발생")
     void kickMember_memberNotFound() {
+
+        UserRoomConnection actorConnection =
+                mock(UserRoomConnection.class);
+
+        when(userRoomConnectionRepository
+                .findByUser_IdAndRoom_Id(1L, 1L))
+                .thenReturn(Optional.of(actorConnection));
+
+        when(actorConnection.getAuthority())
+                .thenReturn(Authority.OWNER);
 
         when(userRoomConnectionRepository
                 .findByUser_IdAndRoom_Id(2L, 1L))
@@ -146,7 +266,11 @@ class UserRoomConnectionServiceTest {
 
         BusinessException exception = assertThrows(
                 BusinessException.class,
-                () -> userRoomConnectionService.kickMember(1L, 2L)
+                () -> userRoomConnectionService.kickMember(
+                        1L,
+                        1L,
+                        2L
+                )
         );
 
         assertThat(exception.getErrorCode().getMessage())
