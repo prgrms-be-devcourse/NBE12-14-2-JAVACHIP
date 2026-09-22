@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import JoinButton from "./JoinButton";
-import { verifyInvite, type Invite } from "../../lib/api/inviteApi";
+import { verifyInvite, type Invite } from "../../../lib/api/inviteApi";
 
 export default function InvitePage() {
   const params = useParams<{ token: string }>();

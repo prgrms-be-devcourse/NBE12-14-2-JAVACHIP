@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { joinRoom } from "../../lib/api/inviteApi";
+import { joinRoom } from "../../../lib/api/inviteApi";
 
 interface JoinButtonProps {
   token: string;

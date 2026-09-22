@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createInvite } from "../lib/api/inviteApi";
+import { createInvite } from '@/app/lib/api/inviteApi';
 
 interface CreateInviteButtonProps {
   roomId: number;

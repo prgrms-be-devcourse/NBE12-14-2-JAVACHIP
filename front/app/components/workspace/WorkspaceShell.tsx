@@ -24,7 +24,7 @@ const navigation: { label: string; path: string; icon: IconName; badge?: string 
   { label: "예산 신청", path: "budget-requests", icon: "request" },
   { label: "정산하기", path: "settlements", icon: "settlement" },
   { label: "멤버", path: "members", icon: "members" },
-  { label: "초대하기", path: "invites", icon: "invite" },
+  { label: "초대하기", path: "invite/create", icon: "invite" },
   { label: "승인 관리", path: "approvals", icon: "approval", badge: "2" },
 ];
 
