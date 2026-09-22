@@ -21,7 +21,9 @@ public enum ErrorCode {
     ROOM_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 모임이 존재하지 않습니다."),
     FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN,"해당 요청에 대한 권한이 없습니다."),
     BUDGET_EXCEEDED(HttpStatus.BAD_REQUEST,"가용예산을 초과하여 차감할 수 없습니다."),
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
+    BUDGET_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "예산신청을 찾을 수 없습니다."),
+    NOT_BUDGET_REQUESTER(HttpStatus.FORBIDDEN, "예산 신청자가 아닙니다.");
 
     private final HttpStatus status;
     private final String message;

@@ -65,4 +65,20 @@ public class BudgetRequestController {
         return ApiResponse.response(HttpStatus.OK, "예산신청 조회성공", budgetRequestService.getBudgetRequest(roomId, user, requestId));
     }
 
+    /**
+     * 예산신청 삭제
+     * @param roomId
+     * @param requestId
+     * @return 예산신청 상세정보
+     */
+    @DeleteMapping("/{roomId}/budget/request/{requestId}")
+    public ResponseEntity<ApiResponse<BudgetRequestResponse>> deleteBudgetRequest(
+            @PathVariable Long roomId,
+            @PathVariable Long requestId
+    ){
+        User user = rq.getActor();
+        budgetRequestService.deleteBudgetRequest(roomId, user, requestId);
+        return ApiResponse.response(HttpStatus.NO_CONTENT, "예산신청 삭제성공", null);
+    }
+
 }

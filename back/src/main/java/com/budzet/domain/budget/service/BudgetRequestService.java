@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -77,6 +78,26 @@ public class BudgetRequestService {
         userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
 
         return budgetRequestRepository.findDtoById(roomId, requestId);
+    }
+
+    /**
+     * 예산신청 삭제
+     * @param roomId
+     * @param user
+     * @param requestId
+     */
+    public void deleteBudgetRequest(Long roomId, User user, Long requestId){
+
+        userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
+
+        BudgetRequestResponse budgetRequestResponse= budgetRequestRepository.findDtoById(roomId, requestId);
+
+        if(budgetRequestResponse == null)
+            throw new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_FOUND);
+        else if (budgetRequestResponse.userId() != user.getId())
+            throw new BusinessException(ErrorCode.NOT_BUDGET_REQUESTER);
+        else
+            budgetRequestRepository.deleteById(requestId);
     }
 
 }
