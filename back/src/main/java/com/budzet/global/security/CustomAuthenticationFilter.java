@@ -79,7 +79,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         }
 
         Map<String, Object> payload =
-                userService.payloadOrNull(accessToken);
+                userService.accessPayloadOrNull(accessToken);
 
         if (payload == null) {
             throw new BusinessException(ErrorCode.INVALID_ACCESS_TOKEN);

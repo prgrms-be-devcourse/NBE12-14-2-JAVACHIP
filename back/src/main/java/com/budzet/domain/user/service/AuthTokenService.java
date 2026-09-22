@@ -10,21 +10,42 @@ import java.util.Map;
 @Service
 public class AuthTokenService {
 
-    @Value("${custom.jwt.secret-pattern}")
-    private String secretPattern;
+    @Value("${custom.jwt.access-secret}")
+    private String accessSecret;
 
-    @Value("${custom.jwt.expire-millis}")
-    private long expireMillis;
+    @Value("${custom.jwt.access-expire-millis}")
+    private long accessExpireMillis;
+
+    @Value("${custom.jwt.refresh-secret}")
+    private String refreshSecret;
+
+    @Value("${custom.jwt.refresh-expire-millis}")
+    private long refreshExpireMillis;
 
     String genAccessToken(User user){
         return Ut.jwt.toString(
-                secretPattern,
-                expireMillis,
+                accessSecret,
+                accessExpireMillis,
                 Map.of("id", user.getId(), "name", user.getName()));
     }
 
-    Map<String, Object> payloadOrNull(String jwt){
-        Map<String, Object> payload = Ut.jwt.payloadOrNull(jwt, secretPattern);
+    String genRefreshToken(User user){
+        return Ut.jwt.toString(
+                refreshSecret,
+                refreshExpireMillis,
+                Map.of("id", user.getId(), "name", user.getName()));
+    }
+
+    Map<String, Object> accessPayloadOrNull(String accessToken){
+        return payloadOrNull(accessToken, accessSecret);
+    }
+
+    Map<String, Object> refreshPayloadOrNull(String refreshToken){
+        return payloadOrNull(refreshToken, refreshSecret);
+    }
+
+    private Map<String, Object> payloadOrNull(String jwt, String secret){
+        Map<String, Object> payload = Ut.jwt.payloadOrNull(jwt, secret);
 
         if(payload == null){
             return null;

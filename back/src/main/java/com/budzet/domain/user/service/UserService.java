@@ -1,10 +1,10 @@
 package com.budzet.domain.user.service;
 
+import com.budzet.domain.user.dto.UserLoginResponse;
 import com.budzet.domain.user.entity.User;
 import com.budzet.domain.user.repository.UserRepository;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,8 +31,24 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public Optional<User> findByEmail(String email){
-        return userRepository.findByEmail(email);
+    @Transactional
+    public UserLoginResponse login(String email, String password){
+        User user = userRepository.findByEmail(email).orElseThrow(
+                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+        );
+
+        checkPassword(password, user.getPassword());
+
+        String accessToken = authTokenService.genAccessToken(user);
+        String refreshToken = authTokenService.genRefreshToken(user);
+
+        user.updateRefreshToken(refreshToken);
+
+        return UserLoginResponse.from(
+                user,
+                accessToken,
+                refreshToken
+        );
     }
 
     public void checkPassword(String inputPassword, String encodedPassword) {
@@ -41,12 +57,8 @@ public class UserService {
         }
     }
 
-    public String genAccessToken(User user){
-        return authTokenService.genAccessToken(user);
-    }
-
-    public Map<String, Object> payloadOrNull(String accessToken) {
-        return authTokenService.payloadOrNull(accessToken);
+    public Map<String, Object> accessPayloadOrNull(String accessToken) {
+        return authTokenService.accessPayloadOrNull(accessToken);
     }
 
     public Optional<User> findById(Long id) {

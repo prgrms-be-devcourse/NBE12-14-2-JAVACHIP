@@ -31,12 +31,12 @@ public class UserController {
 
 
     @PostMapping("/join")
-    public ApiResponse<UserDto> join(
+    public ResponseEntity<ApiResponse<UserDto>> join(
             @RequestBody @Valid UserJoinRequest reqBody
     ){
         User user = userService.join(reqBody.email(), reqBody.password(), reqBody.name());
 
-        return ApiResponse.success(
+        return ApiResponse.response(
                 HttpStatus.CREATED,
                 "회원가입이 완료되었습니다.",
                 new UserDto(user)
@@ -44,22 +44,18 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ApiResponse<UserLoginResponse> login(
+    public ResponseEntity<ApiResponse<UserLoginResponse>> login(
             @RequestBody @Valid UserLoginRequest reqBody
     ){
-        User actor = userService.findByEmail(reqBody.email()).orElseThrow(
-                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
-        );
+        UserLoginResponse response = userService.login(reqBody.email(), reqBody.password());
 
-        userService.checkPassword(reqBody.password(), actor.getPassword());
+        rq.addCookie("accessToken", response.accessToken());
+        rq.addCookie("refreshToken", response.refreshToken());
 
-        String accessToken = userService.genAccessToken(actor);
-        rq.addCookie("accessToken", accessToken);
-
-        return ApiResponse.success(
+        return ApiResponse.response(
                 HttpStatus.OK,
                 "로그인에 성공했습니다.",
-                UserLoginResponse.from(actor, accessToken)
+                response
         );
     }
 
