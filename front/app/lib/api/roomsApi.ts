@@ -66,3 +66,9 @@ export async function deleteRoom(roomId: number) {
 export async function getMembers(roomId: number) {
   return apiFetch<Member[]>(`/rooms/${roomId}/members`);
 }
+
+export async function kickMember(roomId: number, userId: number) {
+  return apiFetch<null>(`/rooms/${roomId}/members/${userId}`, {
+    method: "DELETE",
+  });
+}
