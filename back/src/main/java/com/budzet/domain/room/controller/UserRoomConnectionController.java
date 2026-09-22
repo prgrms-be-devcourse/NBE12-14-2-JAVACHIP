@@ -54,7 +54,9 @@ public class UserRoomConnectionController {
             @PathVariable Long roomId,
             @PathVariable Long userId
     ) {
-        userRoomConnectionService.kickMember(roomId, userId);
+        Long actorId = rq.getActor().getId();
+
+        userRoomConnectionService.kickMember(actorId, roomId, userId);
 
         return ApiResponse.success(
                 HttpStatus.OK,

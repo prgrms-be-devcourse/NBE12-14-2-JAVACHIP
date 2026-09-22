@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.budzet.domain.room.dto.AuthorityChangeRequest;
 
 @RestController
 @RequiredArgsConstructor
@@ -94,6 +95,48 @@ public class RoomController {
         return ApiResponse.response(
                 HttpStatus.OK,
                 "모임을 삭제했습니다.",
+                null
+        );
+    }
+
+    @PatchMapping("/{roomId}/members/{userId}/authority")
+    public ResponseEntity<ApiResponse<Void>> changeAuthority(
+            @PathVariable Long roomId,
+            @PathVariable Long userId,
+            @RequestBody @Valid AuthorityChangeRequest request
+    ) {
+        Long actorId = rq.getActor().getId();
+
+        roomService.changeAuthority(
+                actorId,
+                roomId,
+                userId,
+                request
+        );
+
+        return ApiResponse.response(
+                HttpStatus.OK,
+                "멤버 권한이 변경되었습니다.",
+                null
+        );
+    }
+
+    @PatchMapping("/{roomId}/members/{userId}/owner")
+    public ResponseEntity<ApiResponse<Void>> delegateOwner(
+            @PathVariable Long roomId,
+            @PathVariable Long userId
+    ) {
+        Long actorId = rq.getActor().getId();
+
+        roomService.delegateOwner(
+                actorId,
+                roomId,
+                userId
+        );
+
+        return ApiResponse.response(
+                HttpStatus.OK,
+                "모임장 권한이 위임되었습니다.",
                 null
         );
     }
