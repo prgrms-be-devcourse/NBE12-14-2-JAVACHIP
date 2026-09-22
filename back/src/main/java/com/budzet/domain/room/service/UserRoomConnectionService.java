@@ -34,16 +34,35 @@ public class UserRoomConnectionService {
     }
 
     @Transactional
-    public void kickMember(Long roomId, Long userId) {
-
-        UserRoomConnection connection =
+    public void kickMember(
+            Long actorId,
+            Long roomId,
+            Long targetUserId
+    ) {
+        UserRoomConnection actorConnection =
                 userRoomConnectionRepository
-                        .findByUser_IdAndRoom_Id(userId, roomId)
+                        .findByUser_IdAndRoom_Id(actorId, roomId)
                         .orElseThrow(() ->
                                 new BusinessException(ErrorCode.MEMBER_NOT_FOUND)
                         );
 
-        userRoomConnectionRepository.delete(connection);
+        if (actorConnection.getAuthority() != Authority.OWNER
+                && actorConnection.getAuthority() != Authority.OPERATOR) {
+            throw new BusinessException(ErrorCode.ROOM_MANAGER_REQUIRED);
+        }
+
+        UserRoomConnection targetConnection =
+                userRoomConnectionRepository
+                        .findByUser_IdAndRoom_Id(targetUserId, roomId)
+                        .orElseThrow(() ->
+                                new BusinessException(ErrorCode.MEMBER_NOT_FOUND)
+                        );
+
+        if (targetConnection.getAuthority() == Authority.OWNER) {
+            throw new BusinessException(ErrorCode.INVALID_AUTHORITY);
+        }
+
+        userRoomConnectionRepository.delete(targetConnection);
     }
 
     @Transactional

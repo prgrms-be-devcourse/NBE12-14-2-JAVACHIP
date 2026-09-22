@@ -1,0 +1,91 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ApiError } from "../../lib/api/types";
+import { getRooms, type Room } from "../../lib/api/roomsApis";
+
+function formatBudget(amount: number, currency: string) {
+  const formatted = new Intl.NumberFormat("ko-KR").format(amount);
+  return currency === "KRW" ? `${formatted}원` : `${currency} ${formatted}`;
+}
+
+function RoomCard({ room }: { room: Room }) {
+  const availableRate = room.totalBudget > 0
+    ? Math.max(0, Math.min(100, (room.availableBudget / room.totalBudget) * 100))
+    : 0;
+  const usedRate = 100 - availableRate;
+
+  return <article className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-7">
+    <div className="flex items-start justify-between gap-5">
+      <div className="flex min-w-0 items-center gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-lg font-bold text-indigo-500">{room.name.charAt(0)}</span>
+        <div className="min-w-0"><h2 className="truncate text-lg font-bold text-zinc-900">{room.name}</h2><p className="mt-1 text-sm text-zinc-500">{room.currency} · 총예산 {formatBudget(room.totalBudget, room.currency)}</p></div>
+      </div>
+      <div className="shrink-0 text-right"><p className="text-sm text-zinc-500">사용 가능</p><p className="mt-1 text-xl font-extrabold text-emerald-600 sm:text-2xl">{formatBudget(room.availableBudget, room.currency)}</p></div>
+    </div>
+
+    <div className="mt-7"><div className="flex h-3 overflow-hidden rounded-full bg-zinc-100" aria-label={`${room.name} 예산 현황`}><span className="bg-indigo-500" style={{ width: `${usedRate}%` }} /><span className="bg-emerald-100" style={{ width: `${availableRate}%` }} /></div><div className="mt-3 flex gap-4 text-sm text-zinc-500"><span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-indigo-500" />배정됨</span><span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-emerald-300" />사용 가능</span></div></div>
+
+    <div className="mt-6 flex flex-wrap items-end justify-between gap-5 border-t border-zinc-200 pt-5"><dl className="grid min-w-[250px] flex-1 grid-cols-2 gap-5 text-sm"><div><dt className="text-zinc-500">총 예산</dt><dd className="mt-1 text-base font-extrabold text-zinc-900">{formatBudget(room.totalBudget, room.currency)}</dd></div><div><dt className="text-zinc-500">사용률</dt><dd className="mt-1 text-base font-extrabold text-zinc-900">{usedRate.toFixed(1)}%</dd></div></dl><div className="flex items-center gap-4"><Link href={`/rooms/${room.id}`} className="text-sm font-semibold text-indigo-600 hover:text-indigo-800">모임 상세</Link><Link href={`/dashboard?roomId=${room.id}`} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700">이 모임 열기</Link></div></div>
+  </article>;
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof ApiError && error.status === 401) {
+    return null;
+  }
+
+  return error instanceof ApiError ? error.message : "모임 목록을 불러오지 못했습니다.";
+}
+
+export default function RoomListPage() {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadRooms = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setRooms(await getRooms());
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getRooms()
+      .then((loadedRooms) => {
+        if (!cancelled) {
+          setRooms(loadedRooms);
+        }
+      })
+      .catch((caughtError: unknown) => {
+        if (!cancelled) {
+          setError(getErrorMessage(caughtError));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return <main className="min-h-screen bg-[#f8f8fb] text-zinc-900">
+    <header className="border-b border-zinc-200 bg-white"><div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-5 sm:px-8"><Link href="/rooms" className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-600 text-xl font-bold text-white">▦</span><span className="text-xl font-extrabold tracking-tight">Budzet</span></Link><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 font-bold text-indigo-500">김</span><span className="text-sm font-semibold">김민준</span></div></div></header>
+    <div className="mx-auto max-w-5xl px-5 py-12 sm:px-8"><div className="flex flex-wrap items-start justify-between gap-5"><div><h1 className="text-3xl font-bold tracking-tight">내 모임</h1><p className="mt-2 text-zinc-500">{loading ? "참여 중인 모임을 불러오는 중이에요" : `참여 중인 ${rooms.length}개의 모임이 있어요`}</p></div><div className="flex gap-2"><button type="button" disabled className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-500 disabled:cursor-not-allowed disabled:opacity-70">＋ 모임 참여</button><Link href="/rooms/create" className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700">＋ 새 모임 만들기</Link></div></div>
+      <section className="mt-10 space-y-5" aria-label="참여 중인 모임">{loading && <div className="rounded-2xl border border-zinc-200 bg-white px-6 py-16 text-center text-sm text-zinc-500">모임 목록을 불러오는 중입니다.</div>}{error && <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-10 text-center"><p className="text-sm font-medium text-red-600">{error}</p><button type="button" onClick={() => void loadRooms()} className="mt-4 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600">다시 시도</button></div>}{!loading && !error && rooms.length === 0 && <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center"><h2 className="font-bold">참여 중인 모임이 없습니다.</h2><p className="mt-2 text-sm text-zinc-500">초대 링크로 참여하거나 새 모임을 만들어 시작하세요.</p></div>}{!loading && !error && rooms.map((room) => <RoomCard key={room.id} room={room} />)}</section>
+      <section className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-indigo-200 bg-indigo-50 px-6 py-6"><div><h2 className="font-bold text-indigo-600">초대 링크로 모임에 참여하기</h2><p className="mt-1 text-sm text-indigo-500">친구에게 받은 초대 링크가 있다면 바로 참여할 수 있어요.</p></div><button type="button" disabled className="rounded-xl border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-600 disabled:cursor-not-allowed disabled:opacity-70">링크로 참여</button></section>
+    </div>
+  </main>;
+}

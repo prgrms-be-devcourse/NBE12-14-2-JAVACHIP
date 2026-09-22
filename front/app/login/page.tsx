@@ -2,10 +2,15 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+
+function getNextPath(next: string | null) {
+  return next?.startsWith("/") && !next.startsWith("//") ? next : "/rooms";
+}
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,7 +43,7 @@ export default function LoginPage() {
       }
 
       alert("로그인되었습니다.");
-      router.push("/");
+      router.replace(getNextPath(searchParams.get("next")));
     } catch (error) {
       console.error(error);
       setError("서버와 연결할 수 없습니다.");

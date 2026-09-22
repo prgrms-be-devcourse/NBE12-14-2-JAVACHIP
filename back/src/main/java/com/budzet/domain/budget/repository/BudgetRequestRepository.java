@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface BudgetRequestRepository extends JpaRepository<BudgetRequest, Long> {
 
@@ -32,5 +33,13 @@ public interface BudgetRequestRepository extends JpaRepository<BudgetRequest, Lo
             "from BudgetRequest br " +
             "where br.room.id = :roomId and br.id = :requestId")
     BudgetRequestResponse findDtoById(@Param("roomId") Long roomId, @Param("requestId") Long requestId);
+
+    /**
+     * id, room_id, user_id 가 일치하는 예산신청 조회
+     * @param id
+     * @param roomId
+     * @return 예산신청 단일항목
+     */
+    Optional<BudgetRequest> findByIdAndRoomId(Long id, Long roomId);
 
 }
