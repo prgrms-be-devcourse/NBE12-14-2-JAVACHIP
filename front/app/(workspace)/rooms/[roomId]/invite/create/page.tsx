@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import CreateInviteButton from "../CreateInviteButton";
 
 export default function CreateInvitePage() {
@@ -13,10 +13,11 @@ export default function CreateInvitePage() {
 }
 
 function CreateInviteContent() {
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
 
-  const roomIdParam = searchParams.get("roomId");
-  const roomId = roomIdParam ? Number(roomIdParam) : null;
+  // const roomIdParam = searchParams.get("roomId");
+  // const roomId = roomIdParam ? Number(roomIdParam) : null;
+  const { roomId } = useParams()
 
   if (!roomId || Number.isNaN(roomId)) {
     return (
@@ -51,7 +52,7 @@ function CreateInviteContent() {
             초대 링크
           </h2>
 
-          <CreateInviteButton roomId={roomId} />
+          <CreateInviteButton roomId={Number(roomId ?? 0)} />
         </section>
 
         <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
