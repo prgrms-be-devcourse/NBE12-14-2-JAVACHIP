@@ -11,6 +11,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -23,6 +25,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf((csrf) -> csrf.disable())
+                .cors(withDefaults())
                 .addFilterBefore(customAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(
