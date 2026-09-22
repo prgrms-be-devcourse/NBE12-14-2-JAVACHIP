@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { getRoom, updateRoom, type Room } from "../../lib/api/roomsApis";
+import ConfirmDialog from "../common/ConfigmDialog/ConfirmDialog";
+import { deleteRoom, getRoom, updateRoom, type Room } from "../../lib/api/roomsApis";
 import { ApiError } from "../../lib/api/types";
 
 function formatBudget(amount: number, currency: string) {
@@ -34,6 +35,7 @@ function getRoomId(value: string | string[] | undefined) {
 
 export default function RoomDetailPage() {
   const { roomId: roomIdParam } = useParams<{ roomId?: string | string[] }>();
+  const router = useRouter();
   const roomId = useMemo(() => getRoomId(roomIdParam), [roomIdParam]);
   const [room, setRoom] = useState<Room | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +45,10 @@ export default function RoomDetailPage() {
   const [nameInput, setNameInput] = useState("");
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [savingName, setSavingName] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadRoom = async () => {
     if (roomId === null) return;
@@ -204,6 +210,50 @@ export default function RoomDetailPage() {
     }
   };
 
+  const openDeleteDialog = () => {
+    setDeleteConfirmation("");
+    setDeleteError(null);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    if (deleting) return;
+
+    setIsDeleteDialogOpen(false);
+    setDeleteConfirmation("");
+    setDeleteError(null);
+  };
+
+  const submitDelete = async () => {
+    if (deleteConfirmation !== room.name || deleting) return;
+
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await deleteRoom(room.id);
+      router.replace("/rooms");
+    } catch (caughtError) {
+      if (caughtError instanceof ApiError && caughtError.status === 401) {
+        setRedirectingToLogin(true);
+        return;
+      }
+
+      if (caughtError instanceof ApiError && caughtError.status === 403) {
+        setDeleteError("방장만 모임을 삭제할 수 있습니다.");
+        return;
+      }
+
+      setDeleteError(
+        caughtError instanceof ApiError
+          ? caughtError.message
+          : "모임을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#f8f8fb] px-5 py-12 text-zinc-900 sm:px-8 sm:py-20">
       <div className="mx-auto w-full max-w-3xl">
@@ -211,7 +261,7 @@ export default function RoomDetailPage() {
 
         <header className="mt-8 flex flex-wrap items-start justify-between gap-5">
           <div className="flex min-w-0 flex-1 items-start gap-4"><span className="mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-xl font-bold text-indigo-500">{room.name.charAt(0)}</span><div className="min-w-0 flex-1"><p className="text-sm font-medium text-zinc-500">{room.currency} · {formatCreatedAt(room.createdAt)} 생성</p>{isEditingName ? <form onSubmit={(event) => void submitName(event)} className="mt-2 max-w-md"><label htmlFor="room-name" className="sr-only">모임 이름</label><div className="flex flex-wrap gap-2"><input id="room-name" value={nameInput} onChange={(event) => { setNameInput(event.target.value); if (updateError) setUpdateError(null); }} disabled={savingName} maxLength={20} className="h-11 min-w-0 flex-1 rounded-xl border border-zinc-300 px-3 text-lg font-bold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-zinc-50" autoFocus /><button type="button" onClick={cancelEditingName} disabled={savingName} className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-600 disabled:cursor-not-allowed">취소</button><button type="submit" disabled={savingName || Boolean(nameError) || updatedName === room.name} className="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300">{savingName ? "저장 중" : "저장"}</button></div>{(updateError || nameError) && <p role="alert" className="mt-2 text-sm font-medium text-red-600">{updateError ?? nameError}</p>}</form> : <h1 className="mt-1 truncate text-3xl font-bold tracking-tight">{room.name}</h1>}</div></div>
-          <div className="flex flex-wrap gap-2">{!isEditingName && <button type="button" onClick={startEditingName} className="rounded-xl border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-600 transition-colors hover:bg-indigo-50">모임 이름 수정</button>}<Link href={`/dashboard?roomId=${room.id}`} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700">이 모임 열기</Link></div>
+          <div className="flex flex-wrap gap-2">{!isEditingName && <><button type="button" onClick={startEditingName} className="rounded-xl border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-600 transition-colors hover:bg-indigo-50">모임 이름 수정</button><button type="button" onClick={openDeleteDialog} className="rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50">모임 삭제</button></>}<Link href={`/dashboard?roomId=${room.id}`} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700">이 모임 열기</Link></div>
         </header>
 
         <section className="mt-10 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="budget-title">
@@ -220,6 +270,34 @@ export default function RoomDetailPage() {
           <div className="mt-9"><div className="flex h-3 overflow-hidden rounded-full bg-zinc-100" aria-label={`${room.name} 예산 사용 현황`}><span className="bg-indigo-500" style={{ width: `${usedRate}%` }} /><span className="bg-emerald-100" style={{ width: `${availableRate}%` }} /></div><div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-zinc-500"><span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-indigo-500" />사용 금액</span><span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-emerald-300" />사용 가능</span></div></div>
         </section>
       </div>
+
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        title="모임을 삭제할까요?"
+        description="모임의 멤버, 예산 신청, 정산 내역, 초대 링크가 모두 영구 삭제됩니다. 계속하려면 아래에 모임 이름을 정확히 입력해 주세요."
+        confirmLabel="모임 삭제"
+        variant="danger"
+        loading={deleting}
+        confirmDisabled={deleteConfirmation !== room.name}
+        onCancel={closeDeleteDialog}
+        onConfirm={() => void submitDelete()}
+      >
+        <label htmlFor="delete-room-confirmation" className="block text-sm font-semibold text-zinc-800">
+          확인을 위해 <span className="text-red-600">{room.name}</span>을 입력해 주세요.
+        </label>
+        <input
+          id="delete-room-confirmation"
+          value={deleteConfirmation}
+          onChange={(event) => {
+            setDeleteConfirmation(event.target.value);
+            if (deleteError) setDeleteError(null);
+          }}
+          disabled={deleting}
+          autoComplete="off"
+          className="mt-2 h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 disabled:bg-zinc-50"
+        />
+        {deleteError && <p role="alert" className="mt-2 text-sm font-medium text-red-600">{deleteError}</p>}
+      </ConfirmDialog>
     </main>
   );
 }

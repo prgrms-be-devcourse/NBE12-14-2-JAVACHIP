@@ -41,6 +41,12 @@ export function updateRoom(roomId: number, request: UpdateRoomRequest) {
   });
 }
 
+export function deleteRoom(roomId: number) {
+  return apiFetch<void>(`/rooms/${roomId}`, {
+    method: "DELETE",
+  });
+}
+
 export function createRoom(request: CreateRoomRequest) {
   return apiFetch<Room>("/rooms", {
     method: "POST",
