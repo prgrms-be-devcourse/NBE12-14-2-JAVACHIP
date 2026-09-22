@@ -216,4 +216,39 @@ class UserControllerTest {
         verify(service, never())
                 .refresh(anyString());
     }
+
+    @Test
+    @DisplayName("로그아웃 성공")
+    void logout_success() {
+        // given
+        UserService service = mock(UserService.class);
+        Rq rq = mock(Rq.class);
+
+        UserController controller =
+                new UserController(service, rq);
+
+        User user = mock(User.class);
+
+        when(rq.getActor())
+                .thenReturn(user);
+
+        when(user.getId())
+                .thenReturn(1L);
+
+        // when
+        ResponseEntity<ApiResponse<Void>> response =
+                controller.logout();
+
+        // then
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getBody().resultCode());
+        assertEquals("로그아웃되었습니다.", response.getBody().message());
+        assertNull(response.getBody().data());
+
+        verify(rq).getActor();
+        verify(service).logout(1L);
+
+        verify(rq).deleteCookie("accessToken");
+        verify(rq).deleteCookie("refreshToken");
+    }
 }

@@ -307,4 +307,52 @@ class UserServiceTest {
                 exception.getErrorCode()
         );
     }
+
+    @Test
+    @DisplayName("로그아웃 성공 시 Refresh Token을 삭제한다")
+    void logout_success() {
+        // given
+        Long userId = 1L;
+
+        User user = new User(
+                "user1@test.com",
+                "encodedPassword",
+                "user1"
+        );
+
+        user.updateRefreshToken("refreshToken");
+
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(user));
+
+        // when
+        userService.logout(userId);
+
+        // then
+        assertNull(user.getRefreshToken());
+
+        verify(userRepository).findById(userId);
+    }
+
+    @Test
+    @DisplayName("로그아웃 시 사용자를 찾을 수 없으면 예외가 발생한다")
+    void logout_userNotFound() {
+        // given
+        Long userId = 1L;
+
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.empty());
+
+        // when
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> userService.logout(userId)
+        );
+
+        // then
+        assertEquals(
+                ErrorCode.USER_NOT_FOUND,
+                exception.getErrorCode()
+        );
+    }
 }
