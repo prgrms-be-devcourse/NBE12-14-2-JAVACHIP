@@ -1,6 +1,6 @@
 package com.budzet.domain.budget.service;
 
-import com.budzet.domain.budget.dto.BudgetRequestListResponse;
+import com.budzet.domain.budget.dto.BudgetRequestResponse;
 import com.budzet.domain.budget.entity.BudgetRequest;
 import com.budzet.domain.budget.repository.BudgetRequestRepository;
 import com.budzet.domain.room.entity.Room;
@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -58,7 +59,7 @@ public class BudgetRequestService {
      * @param user
      * @return 현재방의 예산신청 목록
      */
-    public List<BudgetRequestListResponse> getBudgetRequestList(Long roomId, User user){
+    public List<BudgetRequestResponse> getBudgetRequestList(Long roomId, User user){
 
         userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
 
@@ -72,11 +73,31 @@ public class BudgetRequestService {
      * @param requestId
      * @return requestId의 예산신청 상세정보
      */
-    public BudgetRequestListResponse getBudgetRequest(Long roomId, User user, Long requestId){
+    public BudgetRequestResponse getBudgetRequest(Long roomId, User user, Long requestId){
 
         userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
 
         return budgetRequestRepository.findDtoById(roomId, requestId);
+    }
+
+    /**
+     * 예산신청 삭제
+     * @param roomId
+     * @param user
+     * @param requestId
+     */
+    public void deleteBudgetRequest(Long roomId, User user, Long requestId){
+
+        userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
+
+        BudgetRequestResponse budgetRequestResponse= budgetRequestRepository.findDtoById(roomId, requestId);
+
+        if(budgetRequestResponse == null)
+            throw new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_FOUND);
+        else if (budgetRequestResponse.userId() != user.getId())
+            throw new BusinessException(ErrorCode.NOT_BUDGET_REQUESTER);
+        else
+            budgetRequestRepository.deleteById(requestId);
     }
 
 }
