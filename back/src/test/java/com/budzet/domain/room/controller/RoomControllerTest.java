@@ -19,12 +19,14 @@ import com.budzet.domain.room.dto.RoomUpdateRequest;
 import com.budzet.domain.room.entity.Currency;
 import com.budzet.domain.room.service.RoomService;
 import com.budzet.domain.user.entity.User;
+import com.budzet.domain.user.service.UserService;
 import com.budzet.global.rq.Rq;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
@@ -33,6 +35,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(RoomController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class RoomControllerTest {
 
     @Autowired
@@ -46,6 +49,9 @@ class RoomControllerTest {
 
     @MockitoBean
     private RoomService roomService;
+
+    @MockitoBean
+    private UserService userService;
 
     @MockitoBean
     private Rq rq;

@@ -1,11 +1,13 @@
 package com.budzet.domain.invite.controller;
 
+import com.budzet.domain.invite.dto.InviteJoinResponse;
 import com.budzet.domain.invite.dto.InviteResponse;
 import com.budzet.domain.invite.service.InviteService;
 import com.budzet.domain.user.entity.User;
 import com.budzet.global.api.ApiResponse;
 import com.budzet.global.rq.Rq;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -76,6 +78,27 @@ class InviteControllerTest {
 
         verify(inviteService)
                 .createInvite(roomId, userId);
+    }
+
+    @Test
+    void JOIN_ROOM() {
+        String code = "ABC1234567";
+        Long userId = 2L;
+        User user = mock(User.class);
+        InviteJoinResponse joinResponse = new InviteJoinResponse(
+                userId, 1L, "MEMBER", true, LocalDateTime.now()
+        );
+
+        when(rq.getActor()).thenReturn(user);
+        when(user.getId()).thenReturn(userId);
+        when(inviteService.joinRoom(code, userId)).thenReturn(joinResponse);
+
+        ApiResponse<InviteJoinResponse> response = controller.joinRoom(code);
+
+        assertThat(response.resultCode()).isEqualTo(201);
+        assertThat(response.message()).isEqualTo("모임에 참여하였습니다.");
+        assertThat(response.data()).isEqualTo(joinResponse);
+        verify(inviteService).joinRoom(code, userId);
     }
 
     @Test

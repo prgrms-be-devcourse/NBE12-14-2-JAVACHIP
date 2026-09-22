@@ -1,6 +1,6 @@
 package com.budzet.domain.budget.entity;
 
-import com.budzet.domain.budget.dto.BudgetUpdateRequest;
+import com.budzet.domain.budget.dto.BudgetChangeUpdateRequest;
 import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -50,13 +50,31 @@ public class BudgetChange {
     @JoinColumn(name = "request_id", unique = true)
     private BudgetRequest request;
 
-    public BudgetChange(Room room, User user, BudgetUpdateRequest budgetUpdateRequest){
+    public BudgetChange(Room room, User user, String userName, BudgetType type,
+                        String reason, Long changeBudget, Long changedBudget) {
         this.room = room;
         this.user = user;
-        this.userName = user.getName();
-        this.type = budgetUpdateRequest.budgetType();
-        this.reason = budgetUpdateRequest.changeReason();
-        this.changeBudget = budgetUpdateRequest.totalBudget();
-        this.changedBudget = budgetUpdateRequest.totalBudget();
+        this.userName = userName;
+        this.type = type;
+        this.reason = reason;
+        this.changeBudget = changeBudget;
+        this.changedBudget = changedBudget;
+    }
+
+    public BudgetChange(Room room, User user, String userName, BudgetType type,
+                        String reason, Long changeBudget) {
+        this(room, user, userName, type, reason, changeBudget, changeBudget);
+    }
+
+    public void addBudgetRequest(BudgetRequest budgetRequest) {
+        this.request = budgetRequest;
+    }
+    
+    public void updateChange(BudgetChangeUpdateRequest request, User user){
+        this.user = user;
+        this.userName = request.userName();
+        this.changeBudget = request.changeBudget();
+        this.changedBudget = request.changedBudget();
+        this.reason = request.reason();
     }
 }

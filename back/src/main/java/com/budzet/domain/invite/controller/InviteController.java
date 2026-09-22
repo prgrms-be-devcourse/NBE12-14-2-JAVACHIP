@@ -1,5 +1,6 @@
 package com.budzet.domain.invite.controller;
 
+import com.budzet.domain.invite.dto.InviteJoinResponse;
 import com.budzet.domain.invite.dto.InviteResponse;
 import com.budzet.domain.invite.service.InviteService;
 import com.budzet.global.api.ApiResponse;
@@ -44,6 +45,20 @@ public class InviteController {
         return ApiResponse.success(
                 HttpStatus.OK,
                 "초대 링크 조회 성공",
+                response
+        );
+    }
+
+    @PostMapping("/join/{code}")
+    public ApiResponse<InviteJoinResponse> joinRoom(
+            @PathVariable String code
+    ) {
+        Long userId = rq.getActor().getId();
+        InviteJoinResponse response = inviteService.joinRoom(code, userId);
+
+        return ApiResponse.success(
+                HttpStatus.CREATED,
+                "모임에 참여하였습니다.",
                 response
         );
     }

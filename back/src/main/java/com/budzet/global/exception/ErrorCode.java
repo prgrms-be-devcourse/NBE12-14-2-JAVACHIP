@@ -20,9 +20,16 @@ public enum ErrorCode {
     BUDGET_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 모임에 등록된 예산 정보가 없습니다."),
     ROOM_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 모임이 존재하지 않습니다."),
     FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN,"해당 요청에 대한 권한이 없습니다."),
+    FORBIDDEN_REQUEST_WRITER(HttpStatus.FORBIDDEN,"해당 신청의 신청자만 정산할 수 있습니다."),
     BUDGET_EXCEEDED(HttpStatus.BAD_REQUEST,"가용예산을 초과하여 차감할 수 없습니다."),
+    INVITE_EXPIRED(HttpStatus.FORBIDDEN, "초대가 만료되어 모임에 참여할 수 없습니다."),
+    INVITE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 초대장입니다."),
+    USER_ALREADY_JOINED_ROOM(HttpStatus.CONFLICT, "이미 참여한 모임입니다."),
+    BUDGET_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 에산신청이 존재하지 않습니다."),
+    BUDGET_REQUEST_NOT_APPROVED(HttpStatus.BAD_REQUEST, "승인된 예산 신청 건이 아닙니다."),
+    SETTLEMENT_AMOUNT_EXCEEDS_APPROVED(HttpStatus.BAD_REQUEST,"승인된 금액을 초과하여 정산할 수 없습니다."),
+    BUDGET_CHANGE_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 정산내역이 존재하지 않습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
-    BUDGET_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "예산신청을 찾을 수 없습니다."),
     NOT_BUDGET_REQUESTER(HttpStatus.FORBIDDEN, "예산 신청자가 아닙니다.");
 
     private final HttpStatus status;
