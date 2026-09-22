@@ -24,6 +24,7 @@ export default function JoinButton({ token }: JoinButtonProps) {
           ? error.message
           : "모임 참여에 실패했습니다.",
       );
+      router.replace("/");
     } finally {
       setJoining(false);
     }
