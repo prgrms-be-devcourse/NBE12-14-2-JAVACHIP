@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -35,12 +35,15 @@ function Icon({ name, className = "" }: { name: IconName; className?: string }) 
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const roomId = searchParams.get("roomId");
+  const withCurrentRoom = (href: string) => roomId ? `${href}?roomId=${roomId}` : href;
   return <aside className="flex h-full w-64 flex-col border-r border-zinc-200 bg-white px-3 py-5">
-    <Link href="/" onClick={onNavigate} className="mb-5 flex items-center gap-2 px-2 text-sm font-medium text-zinc-500"><Icon name="back" className="h-4 w-4" />내 모임 목록</Link>
+    <Link href="/rooms" onClick={onNavigate} className="mb-5 flex items-center gap-2 px-2 text-sm font-medium text-zinc-500"><Icon name="back" className="h-4 w-4" />내 모임 목록</Link>
     <button type="button" className="mb-6 flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-zinc-50"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-base font-bold text-white">한</span><span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-zinc-800">한양대 사진동아리 렌즈</span><Icon name="chevron" className="h-4 w-4 text-zinc-400" /></button>
     <nav aria-label="업무 메뉴" className="space-y-1">{navigation.map((item) => {
       const active = pathname === item.href;
-      return <Link key={item.href} href={item.href} onClick={onNavigate} className={`flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${active ? "bg-indigo-50 text-indigo-600" : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"}`}><Icon name={item.icon} /><span className="flex-1">{item.label}</span>{item.badge && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 text-xs font-semibold text-amber-700">{item.badge}</span>}</Link>;
+      return <Link key={item.href} href={withCurrentRoom(item.href)} onClick={onNavigate} className={`flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${active ? "bg-indigo-50 text-indigo-600" : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"}`}><Icon name={item.icon} /><span className="flex-1">{item.label}</span>{item.badge && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 text-xs font-semibold text-amber-700">{item.badge}</span>}</Link>;
     })}</nav>
     <div className="mt-auto border-t border-zinc-100 px-2 pt-4"><div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 text-sm font-semibold text-white">김</span><div><p className="text-sm font-semibold text-zinc-800">김민준</p><p className="text-xs text-zinc-500">방장</p></div></div></div>
   </aside>;
