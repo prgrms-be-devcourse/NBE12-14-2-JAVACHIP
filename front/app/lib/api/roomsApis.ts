@@ -9,6 +9,14 @@ export type Room = {
   createdAt: string;
 };
 
+export type RoomCurrency = "KRW" | "USD" | "JPY";
+
+export type CreateRoomRequest = {
+  name: string;
+  totalBudget: number;
+  currency: RoomCurrency;
+};
+
 type RoomListResponse = {
   rooms: Room[];
 };
@@ -16,4 +24,11 @@ type RoomListResponse = {
 export async function getRooms() {
   const data = await apiFetch<RoomListResponse>("/rooms");
   return data.rooms;
+}
+
+export function createRoom(request: CreateRoomRequest) {
+  return apiFetch<Room>("/rooms", {
+    method: "POST",
+    body: request,
+  });
 }
