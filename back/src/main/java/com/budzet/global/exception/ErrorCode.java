@@ -30,7 +30,8 @@ public enum ErrorCode {
     SETTLEMENT_AMOUNT_EXCEEDS_APPROVED(HttpStatus.BAD_REQUEST,"승인된 금액을 초과하여 정산할 수 없습니다."),
     BUDGET_CHANGE_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 정산내역이 존재하지 않습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
-    NOT_BUDGET_REQUESTER(HttpStatus.FORBIDDEN, "예산 신청자가 아닙니다.");
+    NOT_BUDGET_REQUESTER(HttpStatus.FORBIDDEN, "예산 신청자가 아닙니다."),
+    INVALID_AUTHORITY(HttpStatus.BAD_REQUEST,"변경할 수 없는 권한입니다.");
 
     private final HttpStatus status;
     private final String message;
