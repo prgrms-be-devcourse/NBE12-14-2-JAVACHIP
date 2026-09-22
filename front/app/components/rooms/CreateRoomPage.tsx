@@ -7,7 +7,7 @@ import { ApiError } from "../../lib/api/types";
 import {
   createRoom,
   type RoomCurrency,
-} from "../../lib/api/roomsApis";
+} from "../../lib/api/roomsApi";
 
 const currencies: { value: RoomCurrency; label: string; symbol: string }[] = [
   { value: "KRW", label: "원", symbol: "₩" },

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "../common/ConfigmDialog/ConfirmDialog";
-import { deleteRoom, getRoom, updateRoom, type Room } from "../../lib/api/roomsApis";
+import { deleteRoom, getRoom, updateRoom, type Room } from "../../lib/api/roomsApi";
 import { ApiError } from "../../lib/api/types";
 
 function formatBudget(amount: number, currency: string) {
