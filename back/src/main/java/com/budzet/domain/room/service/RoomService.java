@@ -1,10 +1,6 @@
 package com.budzet.domain.room.service;
 
-import com.budzet.domain.room.dto.RoomCreateRequest;
-import com.budzet.domain.room.dto.RoomCreateResponse;
-import com.budzet.domain.room.dto.RoomDetailResponse;
-import com.budzet.domain.room.dto.RoomListResponse;
-import com.budzet.domain.room.dto.RoomUpdateRequest;
+import com.budzet.domain.room.dto.*;
 import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.entity.UserRoomConnection;
@@ -18,6 +14,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.budzet.domain.room.dto.AuthorityChangeRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -104,5 +101,41 @@ public class RoomService {
         }
 
         roomRepository.delete(room);
+    }
+
+    @Transactional
+    public void changeAuthority(
+            Long actorId,
+            Long roomId,
+            Long targetUserId,
+            AuthorityChangeRequest request
+    ) {
+        UserRoomConnection actorConnection =
+                userRoomConnectionRepository
+                        .findByUser_IdAndRoom_Id(actorId, roomId)
+                        .orElseThrow(() -> new BusinessException(
+                                ErrorCode.MEMBER_NOT_FOUND
+                        ));
+
+        if (actorConnection.getAuthority() != Authority.OWNER) {
+            throw new BusinessException(ErrorCode.OWNER_REQUIRED);
+        }
+
+        UserRoomConnection targetConnection =
+                userRoomConnectionRepository
+                        .findByUser_IdAndRoom_Id(targetUserId, roomId)
+                        .orElseThrow(() -> new BusinessException(
+                                ErrorCode.MEMBER_NOT_FOUND
+                        ));
+
+        if (targetConnection.getAuthority() == Authority.OWNER) {
+            throw new BusinessException(ErrorCode.OWNER_REQUIRED);
+        }
+
+        if (request.authority() == Authority.OWNER) {
+            throw new BusinessException(ErrorCode.INVALID_AUTHORITY);
+        }
+
+        targetConnection.changeAuthority(request.authority());
     }
 }
