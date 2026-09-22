@@ -17,6 +17,10 @@ export type CreateRoomRequest = {
   currency: RoomCurrency;
 };
 
+export type UpdateRoomRequest = {
+  name: string;
+};
+
 type RoomListResponse = {
   rooms: Room[];
 };
@@ -28,6 +32,13 @@ export async function getRooms() {
 
 export function getRoom(roomId: number) {
   return apiFetch<Room>(`/rooms/${roomId}`);
+}
+
+export function updateRoom(roomId: number, request: UpdateRoomRequest) {
+  return apiFetch<Room>(`/rooms/${roomId}`, {
+    method: "PATCH",
+    body: request,
+  });
 }
 
 export function createRoom(request: CreateRoomRequest) {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { getRoom, type Room } from "../../lib/api/roomsApis";
+import { getRoom, updateRoom, type Room } from "../../lib/api/roomsApis";
 import { ApiError } from "../../lib/api/types";
 
 function formatBudget(amount: number, currency: string) {
@@ -39,6 +39,10 @@ export default function RoomDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(roomId !== null);
   const [redirectingToLogin, setRedirectingToLogin] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [savingName, setSavingName] = useState(false);
 
   const loadRoom = async () => {
     if (roomId === null) return;
@@ -142,6 +146,63 @@ export default function RoomDetailPage() {
     ? Math.max(0, Math.min(100, (usedBudget / room.totalBudget) * 100))
     : 0;
   const availableRate = 100 - usedRate;
+  const updatedName = nameInput.trim();
+  const nameError = !updatedName
+    ? "모임 이름을 입력해 주세요."
+    : updatedName.length > 20
+      ? "모임 이름은 20자 이하여야 합니다."
+      : null;
+
+  const startEditingName = () => {
+    setNameInput(room.name);
+    setUpdateError(null);
+    setIsEditingName(true);
+  };
+
+  const cancelEditingName = () => {
+    if (savingName) return;
+
+    setNameInput("");
+    setUpdateError(null);
+    setIsEditingName(false);
+  };
+
+  const submitName = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (nameError || updatedName === room.name) {
+      setUpdateError(nameError);
+      return;
+    }
+
+    setSavingName(true);
+    setUpdateError(null);
+
+    try {
+      const updatedRoom = await updateRoom(room.id, { name: updatedName });
+      setRoom(updatedRoom);
+      setIsEditingName(false);
+      setNameInput("");
+    } catch (caughtError) {
+      if (caughtError instanceof ApiError && caughtError.status === 401) {
+        setRedirectingToLogin(true);
+        return;
+      }
+
+      if (caughtError instanceof ApiError && caughtError.status === 403) {
+        setUpdateError("방장만 모임 이름을 수정할 수 있습니다.");
+        return;
+      }
+
+      setUpdateError(
+        caughtError instanceof ApiError
+          ? caughtError.message
+          : "모임 이름을 수정하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#f8f8fb] px-5 py-12 text-zinc-900 sm:px-8 sm:py-20">
@@ -149,8 +210,8 @@ export default function RoomDetailPage() {
         <Link href="/rooms" className="inline-flex items-center gap-1 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900"><span aria-hidden>‹</span> 내 모임으로</Link>
 
         <header className="mt-8 flex flex-wrap items-start justify-between gap-5">
-          <div className="flex min-w-0 items-center gap-4"><span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-xl font-bold text-indigo-500">{room.name.charAt(0)}</span><div><p className="text-sm font-medium text-zinc-500">{room.currency} · {formatCreatedAt(room.createdAt)} 생성</p><h1 className="mt-1 truncate text-3xl font-bold tracking-tight">{room.name}</h1></div></div>
-          <Link href={`/dashboard?roomId=${room.id}`} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700">이 모임 열기</Link>
+          <div className="flex min-w-0 flex-1 items-start gap-4"><span className="mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-xl font-bold text-indigo-500">{room.name.charAt(0)}</span><div className="min-w-0 flex-1"><p className="text-sm font-medium text-zinc-500">{room.currency} · {formatCreatedAt(room.createdAt)} 생성</p>{isEditingName ? <form onSubmit={(event) => void submitName(event)} className="mt-2 max-w-md"><label htmlFor="room-name" className="sr-only">모임 이름</label><div className="flex flex-wrap gap-2"><input id="room-name" value={nameInput} onChange={(event) => { setNameInput(event.target.value); if (updateError) setUpdateError(null); }} disabled={savingName} maxLength={20} className="h-11 min-w-0 flex-1 rounded-xl border border-zinc-300 px-3 text-lg font-bold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-zinc-50" autoFocus /><button type="button" onClick={cancelEditingName} disabled={savingName} className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-600 disabled:cursor-not-allowed">취소</button><button type="submit" disabled={savingName || Boolean(nameError) || updatedName === room.name} className="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300">{savingName ? "저장 중" : "저장"}</button></div>{(updateError || nameError) && <p role="alert" className="mt-2 text-sm font-medium text-red-600">{updateError ?? nameError}</p>}</form> : <h1 className="mt-1 truncate text-3xl font-bold tracking-tight">{room.name}</h1>}</div></div>
+          <div className="flex flex-wrap gap-2">{!isEditingName && <button type="button" onClick={startEditingName} className="rounded-xl border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-600 transition-colors hover:bg-indigo-50">모임 이름 수정</button>}<Link href={`/dashboard?roomId=${room.id}`} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700">이 모임 열기</Link></div>
         </header>
 
         <section className="mt-10 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="budget-title">
