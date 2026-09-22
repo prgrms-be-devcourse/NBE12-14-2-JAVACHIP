@@ -20,13 +20,13 @@ class AuthTokenServiceTest {
 
         ReflectionTestUtils.setField(
                 authTokenService,
-                "secretPattern",
+                "accessSecret",
                 "test-secret-key-for-budzet-jwt-authentication-123456789"
         );
 
         ReflectionTestUtils.setField(
                 authTokenService,
-                "expireMillis",
+                "accessExpireMillis",
                 3600L
         );
     }

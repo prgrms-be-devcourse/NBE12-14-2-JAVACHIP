@@ -34,7 +34,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "JWT_SECRET=test_jwt_secret_key_12345678901234567890")
+@SpringBootTest(properties = {
+        "ACCESS_SECRET=test_access_secret_key_12345678901234567890",
+        "REFRESH_SECRET=test_refresh_secret_key_12345678901234567890"
+})
 @AutoConfigureMockMvc(addFilters = false)
 public class BudgetControllerTest {
 
