@@ -59,11 +59,15 @@ public class BudgetRequest {
         this.requestedAmount = requestedAmount;
     }
     //todo 신청 상태 enum으로 변경 시 수정
-    public void changeToSettlement(String status){
-        if(!"APPROVED".equals(this.status)){
+    public void changeToSettlement(String status) {
+        if (!"APPROVED".equals(this.status)) {
             throw new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_APPROVED);
         }
-
-        this.status = status;
+    }
+    public void updateRequest(BudgetChange budgetChange, User user){
+        this.user = user;
+        this.userName = budgetChange.getUserName();
+        this.reason = budgetChange.getReason();
+        this.requestedAmount = budgetChange.getChangeBudget();
     }
 }

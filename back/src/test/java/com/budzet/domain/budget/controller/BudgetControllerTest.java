@@ -29,6 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -342,5 +343,75 @@ public class BudgetControllerTest {
                 .andExpect(jsonPath("$.resultCode").value(200))
                 .andExpect(jsonPath("$.message").value("정산 내역 상세조회 성공"))
                 .andExpect(jsonPath("$.data.id").value(changeId));
+    }
+
+    @Test
+    @DisplayName("정산 내역 수정 성공 - 200 OK 응답 반환")
+    void updateBudgetChange_success() throws Exception {
+        // given
+        Long roomId = 1L;
+        Long changeId = 10L;
+
+        BudgetChangeUpdateRequest request = new BudgetChangeUpdateRequest(
+                10000L, 8000L, "홍길동", "hong@test.com", "장비 구매 영수증 수정"
+        );
+
+        BudgetChangeUpdateResponse response = new BudgetChangeUpdateResponse(
+                changeId, 10000L, 8000L, "홍길동", "hong@test.com", "장비 구매 영수증 수정"
+        );
+
+        given(budgetChangeService.updateBudgetChange(eq(roomId), eq(testUserId), eq(changeId), any(BudgetChangeUpdateRequest.class)))
+                .willReturn(response);
+
+        // when & then
+        mvc.perform(put("/rooms/{roomId}/budget/changes/{changeId}", roomId, changeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value(200))
+                .andExpect(jsonPath("$.message").value("정산 내역 수정 성공"))
+                .andExpect(jsonPath("$.data.id").value(changeId))
+                .andExpect(jsonPath("$.data.changeBudget").value(10000L))
+                .andExpect(jsonPath("$.data.changedBudget").value(8000L))
+                .andExpect(jsonPath("$.data.userName").value("홍길동"))
+                .andExpect(jsonPath("$.data.userEmail").value("hong@test.com"));
+
+        verify(budgetChangeService).updateBudgetChange(eq(roomId), eq(testUserId), eq(changeId), any(BudgetChangeUpdateRequest.class));
+    }
+
+    @Test
+    @DisplayName("정산 내역 수정 실패 - 유효성 검증 실패 (음수 금액 입력)")
+    void updateBudgetChange_validationFailure_negativeAmount() throws Exception {
+        // given
+        Long roomId = 1L;
+        Long changeId = 10L;
+
+        BudgetChangeUpdateRequest invalidRequest = new BudgetChangeUpdateRequest(
+                10000L, -5000L, "홍길동", "hong@test.com", "잘못된 금액"
+        );
+
+        // when & then
+        mvc.perform(put("/rooms/{roomId}/budget/changes/{changeId}", roomId, changeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("정산 내역 수정 실패 - 유효성 검증 실패 (이메일 형식 오류)")
+    void updateBudgetChange_validationFailure_invalidEmail() throws Exception {
+        // given
+        Long roomId = 1L;
+        Long changeId = 10L;
+
+        BudgetChangeUpdateRequest invalidRequest = new BudgetChangeUpdateRequest(
+                10000L, 8000L, "홍길동", "invalid-email", "이메일 오류"
+        );
+
+        // when & then
+        mvc.perform(put("/rooms/{roomId}/budget/changes/{changeId}", roomId, changeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest());
     }
 }
