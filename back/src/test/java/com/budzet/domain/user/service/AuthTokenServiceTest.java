@@ -53,7 +53,6 @@ class AuthTokenServiceTest {
 
         assertNotNull(payload);
         assertEquals(1L, payload.get("id"));
-        assertEquals("user1", payload.get("name"));
     }
 
     @Test

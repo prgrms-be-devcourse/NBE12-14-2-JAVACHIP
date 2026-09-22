@@ -26,14 +26,14 @@ public class AuthTokenService {
         return Ut.jwt.toString(
                 accessSecret,
                 accessExpireMillis,
-                Map.of("id", user.getId(), "name", user.getName()));
+                Map.of("id", user.getId()));
     }
 
     String genRefreshToken(User user){
         return Ut.jwt.toString(
                 refreshSecret,
                 refreshExpireMillis,
-                Map.of("id", user.getId(), "name", user.getName()));
+                Map.of("id", user.getId()));
     }
 
     Map<String, Object> accessPayloadOrNull(String accessToken){
@@ -52,8 +52,7 @@ public class AuthTokenService {
         }
 
         Long id = ((Number) payload.get("id")).longValue();
-        String name = (String)payload.get("name");
 
-        return Map.of("id", id, "name", name);
+        return Map.of("id", id);
     }
 }
