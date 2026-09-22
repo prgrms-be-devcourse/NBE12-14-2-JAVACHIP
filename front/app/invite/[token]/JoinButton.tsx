@@ -17,7 +17,7 @@ export default function JoinButton({ token }: JoinButtonProps) {
     try {
       setJoining(true);
       const joinedRoom = await joinRoom(token);
-      router.replace(`/dashboard?roomId=${joinedRoom.roomId}`);
+      router.replace(`/rooms/${joinedRoom.roomId}/dashboard`);
     } catch (error) {
       alert(
         error instanceof Error

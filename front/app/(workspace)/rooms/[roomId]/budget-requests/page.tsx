@@ -1,33 +1,23 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
   createBudgetRequest,
   getBudgetRequests,
   type BudgetRequest,
-} from "../../lib/api/budgetRequestApi";
+} from "../../../../lib/api/budgetRequestApi";
 
 import {
   getBudget,
   type Budget,
-} from "../../lib/api/budgetApi";
+} from "../../../../lib/api/budgetApi";
 
 export default function BudgetRequestsPage() {
-  return (
-    <Suspense fallback={<LoadingState />}>
-      <BudgetRequestsContent />
-    </Suspense>
-  );
-}
-
-function BudgetRequestsContent() {
-  const searchParams = useSearchParams();
-
-  const roomIdParam = searchParams.get("roomId");
-  const roomId = roomIdParam ? Number(roomIdParam) : null;
+  const { roomId: roomIdParam } = useParams<{ roomId: string }>();
+  const roomId = Number(roomIdParam);
 
   const [budget, setBudget] = useState<Budget | null>(null);
   const [requests, setRequests] = useState<BudgetRequest[]>([]);
