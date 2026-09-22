@@ -97,11 +97,20 @@ class UserRoomConnectionControllerTest {
     void 멤버_강퇴() {
         // given
         Long roomId = 1L;
-        Long userId = 2L;
+        Long targetUserId = 2L;
+        Long actorId = 1L;
+
+        User user = mock(User.class);
+
+        when(rq.getActor())
+                .thenReturn(user);
+
+        when(user.getId())
+                .thenReturn(actorId);
 
         // when
         var response =
-                controller.kickMember(roomId, userId);
+                controller.kickMember(roomId, targetUserId);
 
         // then
         assertThat(response.resultCode())
@@ -113,8 +122,18 @@ class UserRoomConnectionControllerTest {
         assertThat(response.data())
                 .isNull();
 
+        verify(rq)
+                .getActor();
+
+        verify(user)
+                .getId();
+
         verify(service)
-                .kickMember(roomId, userId);
+                .kickMember(
+                        actorId,
+                        roomId,
+                        targetUserId
+                );
     }
 
     @Test
