@@ -7,7 +7,7 @@ import { ApiError } from "../../lib/api/types";
 import {
   createRoom,
   type RoomCurrency,
-} from "../../lib/api/roomsApis";
+} from "../../lib/api/roomsApi";
 
 const currencies: { value: RoomCurrency; label: string; symbol: string }[] = [
   { value: "KRW", label: "원", symbol: "₩" },
@@ -57,7 +57,7 @@ export default function CreateRoomPage() {
         totalBudget: Number(budget),
         currency,
       });
-      router.replace(`/dashboard?roomId=${room.id}`);
+      router.replace(`/rooms/${room.id}/dashboard`);
     } catch (caughtError) {
       if (!(caughtError instanceof ApiError && caughtError.status === 401)) {
         setError(

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { joinRoom } from "../../lib/api/inviteApi";
+import { joinRoom } from '@/app/lib/api/inviteApi';
 
 interface JoinButtonProps {
   token: string;
@@ -17,13 +17,14 @@ export default function JoinButton({ token }: JoinButtonProps) {
     try {
       setJoining(true);
       const joinedRoom = await joinRoom(token);
-      router.replace(`/dashboard?roomId=${joinedRoom.roomId}`);
+      router.replace(`/rooms/${joinedRoom.roomId}/dashboard`);
     } catch (error) {
       alert(
         error instanceof Error
           ? error.message
           : "모임 참여에 실패했습니다.",
       );
+      router.replace("/");
     } finally {
       setJoining(false);
     }
