@@ -1,13 +1,21 @@
 package com.budzet.domain.room.entity;
 
 import com.budzet.domain.user.entity.User;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @Getter
@@ -35,18 +43,43 @@ public class UserRoomConnection {
     @CreatedDate
     private LocalDateTime createdAt;
 
-    private UserRoomConnection(User user, Room room, Authority authority, boolean joined) {
+    private UserRoomConnection(
+            User user,
+            Room room,
+            Authority authority,
+            boolean joined
+    ) {
         this.user = user;
         this.room = room;
         this.authority = authority;
         this.joined = joined;
     }
 
-    public static UserRoomConnection createOwner(User user, Room room) {
-        return new UserRoomConnection(user, room, Authority.OWNER, true);
+    public static UserRoomConnection createOwner(
+            User user,
+            Room room
+    ) {
+        return new UserRoomConnection(
+                user,
+                room,
+                Authority.OWNER,
+                true
+        );
     }
 
-    public static UserRoomConnection createMember(User user, Room room) {
-        return new UserRoomConnection(user, room, Authority.MEMBER, true);
+    public static UserRoomConnection createMember(
+            User user,
+            Room room
+    ) {
+        return new UserRoomConnection(
+                user,
+                room,
+                Authority.MEMBER,
+                true
+        );
+    }
+
+    public void changeAuthority(Authority authority) {
+        this.authority = authority;
     }
 }

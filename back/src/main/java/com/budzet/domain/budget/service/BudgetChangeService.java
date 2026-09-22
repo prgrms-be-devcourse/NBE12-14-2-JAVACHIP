@@ -1,16 +1,16 @@
 package com.budzet.domain.budget.service;
 
-import com.budzet.domain.budget.dto.BudgetChangeCreateRequest;
-import com.budzet.domain.budget.dto.BudgetChangeCreateResponse;
-import com.budzet.domain.budget.dto.BudgetChangeDetailResponse;
-import com.budzet.domain.budget.dto.BudgetChangeListResponse;
+import com.budzet.domain.budget.dto.*;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetRequest;
 import com.budzet.domain.budget.entity.BudgetType;
 import com.budzet.domain.budget.repository.BudgetChangeRepository;
 import com.budzet.domain.budget.repository.BudgetRequestRepository;
+import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.Room;
 import com.budzet.domain.room.entity.UserRoomConnection;
+import com.budzet.domain.user.entity.User;
+import com.budzet.domain.user.repository.UserRepository;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +26,7 @@ public class BudgetChangeService {
     private final BudgetChangeRepository budgetChangeRepository;
     private final BudgetRequestRepository budgetRequestRepository;
     private final BudgetService budgetService;
+    private final UserRepository userRepository;
 
     @Transactional
     public BudgetChangeCreateResponse createBudgetChange(
@@ -98,5 +99,62 @@ public class BudgetChangeService {
                 .orElseThrow(()-> new BusinessException(ErrorCode.BUDGET_CHANGE_NOT_FOUND));
 
         return BudgetChangeDetailResponse.from(budgetChange);
+    }
+
+    @Transactional
+    public BudgetChangeUpdateResponse updateBudgetChange(
+            Long roomId, Long userId, Long changeId, BudgetChangeUpdateRequest updateRequest){
+
+        //유저권한이 OWNER인지 확인
+        UserRoomConnection connection = budgetService.validateRoomMember(roomId, userId);
+        if(connection.getAuthority() != Authority.OWNER){
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
+
+        //입력 받은 유저이름과 이메일로 유저를 찾아 가져옴
+        User user = userRepository.findByNameAndEmail(updateRequest.userName(),updateRequest.userEmail())
+                .orElseThrow(()-> new BusinessException(ErrorCode.BAD_REQUEST,"유저 이름과 이메일이 일치하지 않습니다."));
+
+        BudgetChange budgetChange = budgetChangeRepository.findById(changeId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.BUDGET_CHANGE_NOT_FOUND));
+
+        if(!budgetChange.getRoom().getId().equals(roomId)){
+            throw new BusinessException(ErrorCode.BAD_REQUEST,"유효한 정산내역이 아닙니다.");
+        }
+
+        Room room = budgetService.findByRoomIdWithLock(roomId);
+
+        // 변경하려는 기존 승인된 신청금액이 현재 가용예산을 초과하면 안되기 때문에 예외 검사
+        /* 예) 초기 방예산 5000설정       현재 실제예산 =1000 가용예산 = 1000
+        *       정산이 한개만 존재할때 -> 신청금액 4000,  정산금액 4000
+        * 이때 신청금액을 6000으로 변경시 애초에 초기 5000원에서 6000원 승인이 안되기 때문*/
+        long resultAmount = updateRequest.changeBudget() - budgetChange.getChangeBudget();
+        if (resultAmount > 0 && room.getAvailableBudget() < resultAmount) {
+            throw new BusinessException(ErrorCode.REQUEST_AMOUNT_OVER_BUDGET);
+        }
+
+
+        //방 예산도 수정
+        /* 수정 전 금액 - 수정 후 금액 계산 그다음 현재 실제, 가용예산예 더하기 처리
+            기존 실제 예산 2000 일때
+            정산 금액이 1000(수정전) - 800(수정후) = 200  -> 실제예산 + 200
+            정산 금액이 1000(수정전) - 1200(수정후) = -200 -> 실제예산 +(-200) */
+
+        //차액 계산
+        Long resultChanged = budgetChange.getChangedBudget() - updateRequest.changedBudget();
+
+
+        room.updateTotalBudget(resultChanged);
+
+
+        //정산 내역 수정
+        budgetChange.updateChange(updateRequest,user);
+
+        //신청 내역이 존재하면 같이 수정
+        if(budgetChange.getRequest() != null){
+            budgetChange.getRequest().updateRequest(budgetChange,user);
+        }
+
+        return BudgetChangeUpdateResponse.from(budgetChange);
     }
 }
