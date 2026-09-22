@@ -1,14 +1,23 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { login } from "../lib/api/userApi";
 
 function getNextPath(next: string | null) {
   return next?.startsWith("/") && !next.startsWith("//") ? next : "/rooms";
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -23,30 +32,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/users/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.message ?? "로그인에 실패했습니다.");
-        return;
-      }
-
+      await login({ email, password });
       alert("로그인되었습니다.");
       router.replace(getNextPath(searchParams.get("next")));
-    } catch (error) {
-      console.error(error);
-      setError("서버와 연결할 수 없습니다.");
+    } catch (caughtError) {
+      console.error(caughtError);
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "로그인에 실패했습니다.",
+      );
     } finally {
       setLoading(false);
     }

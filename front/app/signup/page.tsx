@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signup } from "../lib/api/userApi";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -19,30 +20,16 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/users/join", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.message ?? "회원가입에 실패했습니다.");
-        return;
-      }
-
+      await signup({ email, password, name });
       alert("회원가입이 완료되었습니다.");
       router.replace("/login");
-    } catch (error) {
-      console.error(error);
-      setError("서버와 연결할 수 없습니다.");
+    } catch (caughtError) {
+      console.error(caughtError);
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "회원가입에 실패했습니다.",
+      );
     } finally {
       setLoading(false);
     }

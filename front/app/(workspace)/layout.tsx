@@ -1,6 +1,10 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import WorkspaceShell from "../components/workspace/WorkspaceShell";
 
 export default function WorkspaceLayout({ children }: { children: ReactNode }) {
-  return <WorkspaceShell>{children}</WorkspaceShell>;
+  return (
+    <Suspense fallback={null}>
+      <WorkspaceShell>{children}</WorkspaceShell>
+    </Suspense>
+  );
 }

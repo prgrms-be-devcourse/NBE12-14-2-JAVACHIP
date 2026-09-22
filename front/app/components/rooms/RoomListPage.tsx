@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ApiError } from "../../lib/api/types";
-import { getRooms, type Room } from "../../lib/api/roomsApis";
+import { getRooms, type Room } from "../../lib/api/roomsApi";
 
 function formatBudget(amount: number, currency: string) {
   const formatted = new Intl.NumberFormat("ko-KR").format(amount);
