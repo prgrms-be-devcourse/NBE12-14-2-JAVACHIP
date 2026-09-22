@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import {useParams, useSearchParams} from "next/navigation";
 
-import { getBudget } from "../../lib/api/budgetApi";
+import { getBudget } from '@/app/lib/api/budgetApi';
 import {
     getBudgetRequests,
     type BudgetRequest,
-} from "../../lib/api/budgetRequestApi";
+} from "@/app/lib/api/budgetRequestApi";
 
 export default function ApprovalsPage() {
     const searchParams = useSearchParams();
 
-    const roomIdParam = searchParams.get("roomId");
-    const roomId = roomIdParam ? Number(roomIdParam) : null;
+    // const roomIdParam = searchParams.get("roomId");
+    // const roomId = roomIdParam ? Number(roomIdParam) : null;
+    const { roomId } = useParams<{ roomId: string }>();
 
     const [requests, setRequests] = useState<BudgetRequest[]>([]);
     const [availableBudget, setAvailableBudget] = useState<number | null>(null);
@@ -29,8 +30,8 @@ export default function ApprovalsPage() {
         const loadApprovalData = async () => {
             try {
                 const [requestData, budgetData] = await Promise.all([
-                    getBudgetRequests(roomId),
-                    getBudget(roomId),
+                    getBudgetRequests(Number(roomId)),
+                    getBudget(Number(roomId)),
                 ]);
 
                 setRequests(requestData);

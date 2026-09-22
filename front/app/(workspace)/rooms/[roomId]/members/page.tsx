@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import {useParams, useSearchParams} from "next/navigation";
 
-import { getMembers, type Member } from "../../lib/api/roomsApi";
+// import { getMembers, type Member } from "../../../../lib/api/roomsApi";
+import { getMembers, type Member} from '@/app/lib/api/roomsApi';
 
 export default function MembersPage() {
     const searchParams = useSearchParams();
-    const roomIdParam = searchParams.get("roomId");
-    const roomId = roomIdParam ? Number(roomIdParam) : null;
+    const { roomId } = useParams<{ roomId: string }>();
+    // const roomIdParam = searchParams.get("roomId");
+    // const roomId = roomIdParam ? Number(roomIdParam) : null;
 
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ export default function MembersPage() {
 
         const loadMembers = async () => {
             try {
-                const data = await getMembers(roomId);
+                const data = await getMembers(Number(roomId));
 
                 setMembers(data);
                 setError(null);

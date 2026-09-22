@@ -1,28 +1,32 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import {Suspense, useCallback, useEffect, useState} from "react";
+import {useParams} from "next/navigation";
 
 import {
   getBudgetChange,
   getSettlementChanges,
   type BudgetChange,
   type BudgetChangeDetailResponse,
-} from "../../lib/api/budgetChangeApi";
+} from "@/app/lib/api/budgetChangeApi";
 
 export default function SettlementsPage() {
-  return (
-      <Suspense fallback={<LoadingState />}>
+  // return (
+  //     <Suspense fallback={<LoadingState />}>
+  //       <SettlementsContent />
+  //     </Suspense>
+  // );
+
+    return (
         <SettlementsContent />
-      </Suspense>
-  );
+    );
 }
 
 function SettlementsContent() {
-  const searchParams = useSearchParams();
 
-  const roomIdParam = searchParams.get("roomId");
-  const roomId = roomIdParam ? Number(roomIdParam) : null;
+  // const roomIdParam = searchParams.get("roomId");
+  // const roomId = roomIdParam ? Number(roomIdParam) : null;
+    const { roomId } = useParams<{ roomId: string }>();
 
   const [changes, setChanges] = useState<BudgetChange[]>([]);
   const [selectedChange, setSelectedChange] =
@@ -40,7 +44,7 @@ function SettlementsContent() {
     }
 
     try {
-      const response = await getSettlementChanges(roomId);
+      const response = await getSettlementChanges(Number(roomId));
 
       setChanges(response.changes);
       setError(null);
@@ -57,11 +61,10 @@ function SettlementsContent() {
     }
   }, [roomId]);
 
-  // 오류 발생 -> state
-  // useEffect(() => {
-  //
-  //   void loadChanges();
-  // }, [loadChanges]);
+  useEffect(() => {
+      // eslint-disable-next-line
+      loadChanges();
+  }, []);
 
   const selectChange = async (changeId: number) => {
     if (!roomId) {
@@ -72,7 +75,7 @@ function SettlementsContent() {
       setDetailLoading(true);
       setError(null);
 
-      const detail = await getBudgetChange(roomId, changeId);
+      const detail = await getBudgetChange(Number(roomId), changeId);
 
       setSelectedChange(detail);
     } catch (caughtError) {
