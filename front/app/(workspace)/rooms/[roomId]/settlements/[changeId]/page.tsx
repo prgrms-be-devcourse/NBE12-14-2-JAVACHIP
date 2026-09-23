@@ -209,58 +209,68 @@ export default function SettlementDetailPage() {
     const spentAmount =
         change?.changedBudget ?? 0;
 
+    /*
+     * 승인 금액 - 실제 지출 금액
+     *
+     * 양수: 반환 금액
+     * 음수: 추가 지출
+     */
+    const balanceAmount =
+        approvedAmount - spentAmount;
+
     const refundAmount = Math.max(
-        approvedAmount - spentAmount,
+        balanceAmount,
+        0,
+    );
+
+    const additionalExpense = Math.max(
+        -balanceAmount,
         0,
     );
 
     return (
         <main className="min-h-screen bg-[#f8f8fb] text-zinc-900">
-            {/* =========================
-                헤더
-            ========================== */}
-            <header className="border-b border-zinc-200 bg-white">
-                <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-5 sm:px-8">
+            <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+                {/* =========================
+                    상단 영역
+                    아래 상세 카드와 동일한 2열 구조
+                ========================== */}
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,1fr)]">
+                    {/* 제목 영역 */}
                     <div>
-                        <Link
-                            href={`/rooms/${roomId}/settlements`}
-                            className="text-lg font-bold tracking-tight text-zinc-900"
-                        >
-                            한양대 사진동아리 렌즈
-                        </Link>
+                        <p className="text-sm font-medium text-indigo-600">
+                            정산 내역 / 상세보기
+                        </p>
 
-                        <p className="mt-0.5 text-xs text-zinc-400">
-                            예산 관리
+                        <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-900">
+                            정산 상세
+                        </h1>
+
+                        <p className="mt-2 text-sm text-zinc-500">
+                            처리된 예산 내역과 정산 정보를
+                            확인할 수 있습니다.
                         </p>
                     </div>
 
-                    <Link
-                        href={`/rooms/${roomId}/settlements`}
-                        className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-600 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
-                    >
-                        목록으로
-                    </Link>
-                </div>
-            </header>
+                    {/* =========================
+                        목록 / 수정 버튼
+                        오른쪽 카드 영역 안에만 위치
+                    ========================== */}
+                    <div className="flex items-start justify-end gap-2 lg:pt-1">
+                        <Link
+                            href={`/rooms/${roomId}/settlements`}
+                            className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-sm font-semibold text-zinc-600 shadow-sm transition-colors hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-800"
+                        >
+                            목록으로
+                        </Link>
 
-            {/* =========================
-                본문
-            ========================== */}
-            <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
-                {/* 제목 */}
-                <div>
-                    <p className="text-sm font-medium text-indigo-600">
-                        정산 내역 / 상세보기
-                    </p>
-
-                    <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-900">
-                        정산 상세
-                    </h1>
-
-                    <p className="mt-2 text-sm text-zinc-500">
-                        처리된 예산 내역과 정산 정보를
-                        확인할 수 있습니다.
-                    </p>
+                        <Link
+                            href={`/rooms/${roomId}/settlements/${changeId}/edit`}
+                            className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
+                        >
+                            수정
+                        </Link>
+                    </div>
                 </div>
 
                 {/* =========================
@@ -369,19 +379,35 @@ export default function SettlementDetailPage() {
                                             </p>
                                         </div>
 
-                                        {/* 반환 금액 */}
-                                        <div className="rounded-xl bg-emerald-50 px-4 py-4">
-                                            <p className="text-xs font-semibold text-emerald-600">
-                                                반환 금액
-                                            </p>
+                                        {/* 반환 금액 / 추가 지출 */}
+                                        {additionalExpense >
+                                        0 ? (
+                                            <div className="rounded-xl bg-red-50 px-4 py-4">
+                                                <p className="text-xs font-semibold text-red-600">
+                                                    추가 지출
+                                                </p>
 
-                                            <p className="mt-1.5 text-lg font-extrabold text-emerald-700">
-                                                {formatMoney(
-                                                    refundAmount,
-                                                    currency,
-                                                )}
-                                            </p>
-                                        </div>
+                                                <p className="mt-1.5 text-lg font-extrabold text-red-700">
+                                                    {formatMoney(
+                                                        additionalExpense,
+                                                        currency,
+                                                    )}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="rounded-xl bg-emerald-50 px-4 py-4">
+                                                <p className="text-xs font-semibold text-emerald-600">
+                                                    반환 금액
+                                                </p>
+
+                                                <p className="mt-1.5 text-lg font-extrabold text-emerald-700">
+                                                    {formatMoney(
+                                                        refundAmount,
+                                                        currency,
+                                                    )}
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </article>
 
@@ -601,7 +627,7 @@ export default function SettlementDetailPage() {
                                                 </div>
                                             </div>
 
-                                            {/* 예비 예산 */}
+                                            {/* 예약 예산 */}
                                             <div className="rounded-xl bg-indigo-50 px-4 py-3">
                                                 <div className="flex items-center justify-between gap-4">
                                                     <span className="text-sm font-medium text-indigo-700">
