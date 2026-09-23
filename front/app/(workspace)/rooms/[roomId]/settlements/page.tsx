@@ -27,12 +27,17 @@ const settlementSteps = [
     "정산 내역은 모든 멤버가 볼 수 있어요",
 ];
 
-function formatBudget(amount: number, currency: string) {
-    const formatted = new Intl.NumberFormat("ko-KR").format(amount);
+function formatMoney(
+    amount: number,
+    currency: Budget["currency"],
+) {
+    const symbols = {
+        KRW: "₩",
+        USD: "$",
+        JPY: "¥",
+    };
 
-    return currency === "KRW"
-        ? `${formatted}원`
-        : `${currency} ${formatted}`;
+    return `${symbols[currency]}${amount.toLocaleString("ko-KR")}`;
 }
 
 function getErrorMessage(error: unknown) {
@@ -85,7 +90,7 @@ export default function SettlementPage() {
 
     const approvedRequests = requests.filter(
         (request) =>
-            request.status.toUpperCase() === "APPROVED",
+            request.status.toUpperCase() === "APPROVE",
     );
 
     const selectedRequest =
@@ -134,7 +139,7 @@ export default function SettlementPage() {
 
             const approved = requestData.filter(
                 (request) =>
-                    request.status.toUpperCase() === "APPROVED",
+                    request.status.toUpperCase() === "APPROVE",
             );
 
             setSelectedRequestId(
@@ -182,7 +187,7 @@ export default function SettlementPage() {
 
                 const approved = requestData.filter(
                     (request) =>
-                        request.status.toUpperCase() === "APPROVED",
+                        request.status.toUpperCase() === "APPROVE",
                 );
 
                 setSelectedRequestId(
@@ -415,7 +420,7 @@ export default function SettlementPage() {
                                         {selectedRequest && (
                                             <p className="mt-0.5 text-xs text-zinc-400">
                                                 승인 금액{" "}
-                                                {formatBudget(
+                                                {formatMoney(
                                                     selectedRequest.requestedAmount,
                                                     currency,
                                                 )}
@@ -540,7 +545,7 @@ export default function SettlementPage() {
                                                                         : "text-zinc-600"
                                                                 }`}
                                                             >
-                                                                {formatBudget(
+                                                                {formatMoney(
                                                                     request.requestedAmount,
                                                                     currency,
                                                                 )}
@@ -569,7 +574,7 @@ export default function SettlementPage() {
 
                             <span className="text-lg font-extrabold text-indigo-700">
                                 {selectedRequest
-                                    ? formatBudget(
+                                    ? formatMoney(
                                         selectedRequest.requestedAmount,
                                         currency,
                                     )
@@ -643,7 +648,7 @@ export default function SettlementPage() {
                         </span>
 
                         <span className="text-base font-extrabold text-emerald-700">
-                            {formatBudget(
+                            {formatMoney(
                                 refundAmount,
                                 currency,
                             )}
@@ -692,7 +697,7 @@ export default function SettlementPage() {
                                         </span>
 
                                         <span className="text-lg font-extrabold text-zinc-900">
-                                            {formatBudget(
+                                            {formatMoney(
                                                 budget.totalBudget,
                                                 budget.currency,
                                             )}
@@ -708,7 +713,7 @@ export default function SettlementPage() {
                                         </span>
 
                                         <span className="text-lg font-extrabold text-emerald-600">
-                                            {formatBudget(
+                                            {formatMoney(
                                                 budget.availableBudget,
                                                 budget.currency,
                                             )}
@@ -724,7 +729,7 @@ export default function SettlementPage() {
                                         </span>
 
                                         <span className="text-lg font-extrabold text-indigo-600">
-                                            {formatBudget(
+                                            {formatMoney(
                                                 budget.reserveBudget,
                                                 budget.currency,
                                             )}
@@ -860,14 +865,14 @@ export default function SettlementPage() {
                                         </td>
 
                                         <td className="px-5 py-4 text-right font-semibold">
-                                            {formatBudget(
+                                            {formatMoney(
                                                 approvedAmount,
                                                 currency,
                                             )}
                                         </td>
 
                                         <td className="px-5 py-4 text-right font-semibold">
-                                            {formatBudget(
+                                            {formatMoney(
                                                 spentAmount,
                                                 currency,
                                             )}
@@ -877,7 +882,7 @@ export default function SettlementPage() {
                                             {refundAmount > 0 ? (
                                                 <span className="font-semibold text-emerald-600">
                                                         +
-                                                    {formatBudget(
+                                                    {formatMoney(
                                                         refundAmount,
                                                         currency,
                                                     )}
@@ -942,7 +947,7 @@ export default function SettlementPage() {
                         </span>
 
                         <span className="text-base font-extrabold text-indigo-700">
-                            {formatBudget(
+                            {formatMoney(
                                 approvedAmount,
                                 currency,
                             )}
@@ -956,7 +961,7 @@ export default function SettlementPage() {
                         </span>
 
                         <span className="text-base font-extrabold text-zinc-900">
-                            {formatBudget(
+                            {formatMoney(
                                 spent,
                                 currency,
                             )}
@@ -970,7 +975,7 @@ export default function SettlementPage() {
                         </span>
 
                         <span className="text-base font-extrabold text-emerald-700">
-                            {formatBudget(
+                            {formatMoney(
                                 refundAmount,
                                 currency,
                             )}
