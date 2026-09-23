@@ -2,30 +2,30 @@ import { apiFetch } from "./client";
 
 export type BudgetRequest = {
     id: number;
-    roomId: number;
     userId: number;
+    userName?: string;
     reason: string;
     requestedAmount: number;
     status: string;
-    rejectReason: string | null;
+    rejectReason?: string;
     createdAt: string;
-    updatedAt: string;
+    updatedAt?: string;
 };
 
-export type BudgetRequestCreateRequest = {
+export type CreateBudgetRequestPayload = {
     reason: string;
     requested_amount: number;
 };
 
 export async function createBudgetRequest(
     roomId: number,
-    request: BudgetRequestCreateRequest,
+    payload: CreateBudgetRequestPayload,
 ) {
     return apiFetch<null>(
         `/rooms/${roomId}/budget/request`,
         {
             method: "POST",
-            body: request,
+            body: payload,
         },
     );
 }
@@ -36,23 +36,30 @@ export async function getBudgetRequests(roomId: number) {
     );
 }
 
-export async function getBudgetRequest(
-    roomId: number,
-    requestId: number,
-) {
-    return apiFetch<BudgetRequest>(
-        `/rooms/${roomId}/budget/request/${requestId}`,
-    );
-}
-
-export async function deleteBudgetRequest(
+export async function approveBudgetRequest(
     roomId: number,
     requestId: number,
 ) {
     return apiFetch<null>(
-        `/rooms/${roomId}/budget/request/${requestId}`,
+        `/rooms/${roomId}/budget/request/${requestId}/approve`,
         {
-            method: "DELETE",
+            method: "PATCH",
+        },
+    );
+}
+
+export async function rejectBudgetRequest(
+    roomId: number,
+    requestId: number,
+    rejectReason: string,
+) {
+    return apiFetch<null>(
+        `/rooms/${roomId}/budget/request/${requestId}/reject`,
+        {
+            method: "PATCH",
+            body: {
+                rejectReason,
+            },
         },
     );
 }
