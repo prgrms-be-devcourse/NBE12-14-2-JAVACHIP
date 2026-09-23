@@ -10,15 +10,18 @@ import {
     getBudget,
     type Budget,
 } from "@/app/lib/api/budgetApi";
+
 import {
     getBudgetRequests,
     type BudgetRequest,
 } from "@/app/lib/api/budgetRequestApi";
+
 import {
     createBudgetChange,
     getSettlementChanges,
     type BudgetChange,
 } from "@/app/lib/api/budgetChangeApi";
+
 import { ApiError } from "@/app/lib/api/types";
 
 const settlementSteps = [
@@ -42,7 +45,10 @@ function formatMoney(
 }
 
 function getErrorMessage(error: unknown) {
-    if (error instanceof ApiError && error.status === 401) {
+    if (
+        error instanceof ApiError &&
+        error.status === 401
+    ) {
         return null;
     }
 
@@ -51,7 +57,9 @@ function getErrorMessage(error: unknown) {
         : "정산 정보를 불러오지 못했습니다.";
 }
 
-function formatDate(date: string | null | undefined) {
+function formatDate(
+    date: string | null | undefined,
+) {
     if (!date) {
         return "-";
     }
@@ -66,100 +74,154 @@ export default function SettlementPage() {
         params.roomId ?? params.id,
     );
 
-    const [budget, setBudget] = useState<Budget | null>(null);
-    const [requests, setRequests] = useState<BudgetRequest[]>([]);
-    const [changes, setChanges] = useState<BudgetChange[]>([]);
+    const [budget, setBudget] =
+        useState<Budget | null>(null);
 
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [requests, setRequests] =
+        useState<BudgetRequest[]>([]);
 
-    const [selectedRequestId, setSelectedRequestId] = useState(0);
-    const [spentAmount, setSpentAmount] = useState("");
-    const [description, setDescription] = useState("");
+    const [changes, setChanges] =
+        useState<BudgetChange[]>([]);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [submitting, setSubmitting] =
+        useState(false);
+
+    const [error, setError] =
+        useState<string | null>(null);
+
+    const [selectedRequestId, setSelectedRequestId] =
+        useState(0);
+
+    const [spentAmount, setSpentAmount] =
+        useState("");
+
+    const [description, setDescription] =
+        useState("");
 
     // 승인 신청 드롭다운
-    const [isRequestDropdownOpen, setIsRequestDropdownOpen] =
-        useState(false);
+    const [
+        isRequestDropdownOpen,
+        setIsRequestDropdownOpen,
+    ] = useState(false);
 
     const requestDropdownRef =
         useRef<HTMLDivElement | null>(null);
 
     // 정산 확인 모달
-    const [isConfirmDialogOpen, setIsConfirmDialogOpen] =
-        useState(false);
+    const [
+        isConfirmDialogOpen,
+        setIsConfirmDialogOpen,
+    ] = useState(false);
 
-    const approvedRequests = requests.filter(
-        (request) =>
-            request.status.toUpperCase() === "APPROVE",
-    );
+    const approvedRequests =
+        requests.filter(
+            (request) =>
+                request.status.toUpperCase() ===
+                "APPROVE",
+        );
 
     const selectedRequest =
         approvedRequests.find(
-            (request) => request.id === selectedRequestId,
+            (request) =>
+                request.id ===
+                selectedRequestId,
         ) ?? approvedRequests[0];
 
-    const currency = budget?.currency ?? "KRW";
+    const currency =
+        budget?.currency ?? "KRW";
 
     const spent =
-        Number(spentAmount.replace(/,/g, "")) || 0;
+        Number(
+            spentAmount.replace(/,/g, ""),
+        ) || 0;
 
     const approvedAmount =
         selectedRequest?.requestedAmount ?? 0;
 
-    const refundAmount = Math.max(
-        approvedAmount - spent,
-        0,
-    );
+    /*
+     * 승인 금액 - 실제 지출 금액
+     *
+     * 양수  → 반환 금액
+     * 0     → 차액 없음
+     * 음수  → 추가 지출
+     */
+    const balanceAmount =
+        approvedAmount - spent;
+
+    const refundAmount =
+        Math.max(balanceAmount, 0);
+
+    const additionalExpense =
+        Math.max(-balanceAmount, 0);
 
     // 정산 데이터 불러오기
-    const loadSettlementData = async () => {
-        if (!Number.isFinite(roomId) || roomId <= 0) {
-            setError("올바른 모임 정보가 없습니다.");
-            setLoading(false);
-            return;
-        }
+    const loadSettlementData =
+        async () => {
+            if (
+                !Number.isFinite(roomId) ||
+                roomId <= 0
+            ) {
+                setError(
+                    "올바른 모임 정보가 없습니다.",
+                );
+                setLoading(false);
+                return;
+            }
 
-        setLoading(true);
-        setError(null);
+            setLoading(true);
+            setError(null);
 
-        try {
-            const [
-                budgetData,
-                requestData,
-                changeData,
-            ] = await Promise.all([
-                getBudget(roomId),
-                getBudgetRequests(roomId),
-                getSettlementChanges(roomId),
-            ]);
+            try {
+                const [
+                    budgetData,
+                    requestData,
+                    changeData,
+                ] = await Promise.all([
+                    getBudget(roomId),
+                    getBudgetRequests(roomId),
+                    getSettlementChanges(roomId),
+                ]);
 
-            setBudget(budgetData);
-            setRequests(requestData);
-            setChanges(changeData.changes);
+                setBudget(budgetData);
+                setRequests(requestData);
+                setChanges(changeData.changes);
 
-            const approved = requestData.filter(
-                (request) =>
-                    request.status.toUpperCase() === "APPROVE",
-            );
+                const approved =
+                    requestData.filter(
+                        (request) =>
+                            request.status.toUpperCase() ===
+                            "APPROVE",
+                    );
 
-            setSelectedRequestId(
-                approved[0]?.id ?? 0,
-            );
-        } catch (caughtError) {
-            setError(getErrorMessage(caughtError));
-        } finally {
-            setLoading(false);
-        }
-    };
+                setSelectedRequestId(
+                    approved[0]?.id ?? 0,
+                );
+            } catch (caughtError) {
+                setError(
+                    getErrorMessage(
+                        caughtError,
+                    ),
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
 
     // 최초 데이터 로딩
     useEffect(() => {
         let cancelled = false;
 
         const load = async () => {
-            if (!Number.isFinite(roomId) || roomId <= 0) {
-                setError("올바른 모임 정보가 없습니다.");
+            if (
+                !Number.isFinite(roomId) ||
+                roomId <= 0
+            ) {
+                setError(
+                    "올바른 모임 정보가 없습니다.",
+                );
                 setLoading(false);
                 return;
             }
@@ -186,17 +248,23 @@ export default function SettlementPage() {
                 setRequests(requestData);
                 setChanges(changeData.changes);
 
-                const approved = requestData.filter(
-                    (request) =>
-                        request.status.toUpperCase() === "APPROVE",
-                );
+                const approved =
+                    requestData.filter(
+                        (request) =>
+                            request.status.toUpperCase() ===
+                            "APPROVE",
+                    );
 
                 setSelectedRequestId(
                     approved[0]?.id ?? 0,
                 );
             } catch (caughtError) {
                 if (!cancelled) {
-                    setError(getErrorMessage(caughtError));
+                    setError(
+                        getErrorMessage(
+                            caughtError,
+                        ),
+                    );
                 }
             } finally {
                 if (!cancelled) {
@@ -223,7 +291,9 @@ export default function SettlementPage() {
                     event.target as Node,
                 )
             ) {
-                setIsRequestDropdownOpen(false);
+                setIsRequestDropdownOpen(
+                    false,
+                );
             }
         };
 
@@ -246,7 +316,9 @@ export default function SettlementPage() {
             event: KeyboardEvent,
         ) => {
             if (event.key === "Escape") {
-                setIsRequestDropdownOpen(false);
+                setIsRequestDropdownOpen(
+                    false,
+                );
             }
         };
 
@@ -264,18 +336,24 @@ export default function SettlementPage() {
     }, []);
 
     // 정산 완료 버튼 클릭
-    // 여기서는 API를 호출하지 않고 확인 모달만 열어준다.
+    // 여기서는 API를 호출하지 않고
+    // 확인 모달만 열어준다.
     const handleSubmit = () => {
         if (!selectedRequest) {
             return;
         }
 
         if (spent <= 0) {
-            setError("실제 지출 금액을 입력해주세요.");
+            setError(
+                "실제 지출 금액을 입력해주세요.",
+            );
             return;
         }
 
-        if (spent > selectedRequest.requestedAmount) {
+        if (
+            spent >
+            selectedRequest.requestedAmount
+        ) {
             setError(
                 "실제 지출 금액은 승인 금액을 초과할 수 없습니다.",
             );
@@ -286,40 +364,46 @@ export default function SettlementPage() {
         setIsConfirmDialogOpen(true);
     };
 
-    // 확인 모달에서 "정산하기"를 눌렀을 때
-    const handleConfirmSettlement = async () => {
-        if (!selectedRequest) {
-            return;
-        }
+    // 확인 모달에서
+    // "정산하기"를 눌렀을 때
+    const handleConfirmSettlement =
+        async () => {
+            if (!selectedRequest) {
+                return;
+            }
 
-        setSubmitting(true);
-        setError(null);
+            setSubmitting(true);
+            setError(null);
 
-        try {
-            await createBudgetChange(
-                roomId,
-                selectedRequest.id,
-                {
-                    changedBudget: spent,
-                    reason: description,
-                },
-            );
+            try {
+                await createBudgetChange(
+                    roomId,
+                    selectedRequest.id,
+                    {
+                        changedBudget: spent,
+                        reason: description,
+                    },
+                );
 
-            // 모달 닫기
-            setIsConfirmDialogOpen(false);
+                // 모달 닫기
+                setIsConfirmDialogOpen(false);
 
-            // 입력값 초기화
-            setSpentAmount("");
-            setDescription("");
+                // 입력값 초기화
+                setSpentAmount("");
+                setDescription("");
 
-            // 정산 내역 및 예산 새로고침
-            await loadSettlementData();
-        } catch (caughtError) {
-            setError(getErrorMessage(caughtError));
-        } finally {
-            setSubmitting(false);
-        }
-    };
+                // 정산 내역 및 예산 새로고침
+                await loadSettlementData();
+            } catch (caughtError) {
+                setError(
+                    getErrorMessage(
+                        caughtError,
+                    ),
+                );
+            } finally {
+                setSubmitting(false);
+            }
+        };
 
     return (
         <section
@@ -335,25 +419,32 @@ export default function SettlementPage() {
                 </h1>
 
                 <p className="mt-1 text-sm text-zinc-500">
-                    승인된 예산을 실제 지출 내역과 함께 정산하세요
+                    승인된 예산을 실제 지출 내역과
+                    함께 정산하세요
                 </p>
             </header>
 
-            {/* 로딩 */}
+            {/* =========================
+                로딩
+            ========================== */}
             {loading && (
                 <div className="mt-4 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-500">
                     정산 정보를 불러오는 중...
                 </div>
             )}
 
-            {/* 에러 */}
+            {/* =========================
+                에러
+            ========================== */}
             {error && (
                 <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                     <span>{error}</span>
 
                     <button
                         type="button"
-                        onClick={loadSettlementData}
+                        onClick={
+                            loadSettlementData
+                        }
                         className="shrink-0 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600"
                     >
                         다시 시도
@@ -361,12 +452,17 @@ export default function SettlementPage() {
                 </div>
             )}
 
-            {/* 예산 정보 없음 */}
-            {!loading && !error && !budget && (
-                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                    해당하는 모임을 찾을 수 없습니다.
-                </div>
-            )}
+            {/* =========================
+                예산 정보 없음
+            ========================== */}
+            {!loading &&
+                !error &&
+                !budget && (
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                        해당하는 모임을
+                        찾을 수 없습니다.
+                    </div>
+                )}
 
             <div className="mt-6 grid max-w-4xl gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,1fr)]">
                 {/* =========================
@@ -389,9 +485,12 @@ export default function SettlementPage() {
                             승인된 예산 신청
                         </label>
 
-                        {approvedRequests.length > 0 ? (
+                        {approvedRequests.length >
+                        0 ? (
                             <div
-                                ref={requestDropdownRef}
+                                ref={
+                                    requestDropdownRef
+                                }
                                 className="relative mt-2"
                             >
                                 {/* 현재 선택된 항목 */}
@@ -399,7 +498,8 @@ export default function SettlementPage() {
                                     type="button"
                                     onClick={() =>
                                         setIsRequestDropdownOpen(
-                                            (open) => !open,
+                                            (open) =>
+                                                !open,
                                         )
                                     }
                                     aria-haspopup="listbox"
@@ -456,20 +556,20 @@ export default function SettlementPage() {
                                         role="listbox"
                                         className="absolute left-0 right-0 z-30 mt-2 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl shadow-zinc-200/50"
                                     >
-                                        {/*
-                                            최대 5개 정도가 보이고
-                                            나머지는 내부 스크롤
-                                        */}
-                                        <div className="request-dropdown-scroll max-h-65 overflow-y-auto p-1.5">
+                                        <div className="request-dropdown-scroll max-h-[250px] overflow-y-auto p-1.5">
                                             {approvedRequests.map(
-                                                (request) => {
+                                                (
+                                                    request,
+                                                ) => {
                                                     const isSelected =
                                                         request.id ===
                                                         selectedRequestId;
 
                                                     return (
                                                         <button
-                                                            key={request.id}
+                                                            key={
+                                                                request.id
+                                                            }
                                                             type="button"
                                                             role="option"
                                                             aria-selected={
@@ -561,7 +661,9 @@ export default function SettlementPage() {
                             </div>
                         ) : (
                             <div className="mt-2 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-4 text-sm text-zinc-500">
-                                정산할 수 있는 승인된 예산 신청이 없습니다.
+                                정산할 수 있는
+                                승인된 예산 신청이
+                                없습니다.
                             </div>
                         )}
                     </div>
@@ -605,14 +707,17 @@ export default function SettlementPage() {
                                             "",
                                         );
 
-                                    setSpentAmount(value);
+                                    setSpentAmount(
+                                        value,
+                                    );
                                 }}
                                 placeholder="0"
                                 className="min-w-0 flex-1 bg-transparent text-base text-zinc-900 outline-none"
                             />
 
                             <span className="text-sm font-medium text-zinc-500">
-                                {currency === "KRW"
+                                {currency ===
+                                "KRW"
                                     ? "원"
                                     : currency}
                             </span>
@@ -634,7 +739,8 @@ export default function SettlementPage() {
                             value={description}
                             onChange={(event) =>
                                 setDescription(
-                                    event.target.value,
+                                    event.target
+                                        .value,
                                 )
                             }
                             placeholder="예: 온사인관에서 사진 30장 인화 및 액자 제작"
@@ -642,17 +748,57 @@ export default function SettlementPage() {
                         />
                     </div>
 
-                    {/* 반환 금액 */}
-                    <div className="mt-4 flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-                        <span className="text-sm font-medium text-emerald-700">
-                            예산 반환 금액
+                    {/* 반환 / 추가 지출 */}
+                    <div
+                        className={`mt-4 flex items-center justify-between rounded-xl px-4 py-3 ${
+                            refundAmount > 0
+                                ? "border border-emerald-100 bg-emerald-50"
+                                : additionalExpense >
+                                0
+                                    ? "border border-red-100 bg-red-50"
+                                    : "border border-zinc-200 bg-zinc-50"
+                        }`}
+                    >
+                        <span
+                            className={`text-sm font-medium ${
+                                refundAmount > 0
+                                    ? "text-emerald-700"
+                                    : additionalExpense >
+                                    0
+                                        ? "text-red-700"
+                                        : "text-zinc-500"
+                            }`}
+                        >
+                            {refundAmount > 0
+                                ? "예산 반환 금액"
+                                : additionalExpense >
+                                0
+                                    ? "추가 지출"
+                                    : "반환 / 추가 지출"}
                         </span>
 
-                        <span className="text-base font-extrabold text-emerald-700">
-                            {formatMoney(
-                                refundAmount,
-                                currency,
-                            )}
+                        <span
+                            className={`text-base font-extrabold ${
+                                refundAmount > 0
+                                    ? "text-emerald-700"
+                                    : additionalExpense >
+                                    0
+                                        ? "text-red-700"
+                                        : "text-zinc-500"
+                            }`}
+                        >
+                            {refundAmount > 0
+                                ? `+${formatMoney(
+                                    refundAmount,
+                                    currency,
+                                )}`
+                                : additionalExpense >
+                                0
+                                    ? `+${formatMoney(
+                                        additionalExpense,
+                                        currency,
+                                    )}`
+                                    : "−"}
                         </span>
                     </div>
 
@@ -662,7 +808,8 @@ export default function SettlementPage() {
                         disabled={
                             submitting ||
                             !selectedRequest ||
-                            approvedRequests.length === 0
+                            approvedRequests.length ===
+                            0
                         }
                         className="mt-4 h-12 w-full rounded-xl bg-indigo-600 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed"
                     >
@@ -753,7 +900,8 @@ export default function SettlementPage() {
                             </div>
                         ) : (
                             <div className="mt-4 rounded-xl bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-400">
-                                예산 정보를 불러오는 중입니다.
+                                예산 정보를
+                                불러오는 중입니다.
                             </div>
                         )}
                     </article>
@@ -766,13 +914,17 @@ export default function SettlementPage() {
 
                         <ol className="mt-3 space-y-2.5">
                             {settlementSteps.map(
-                                (step, index) => (
+                                (
+                                    step,
+                                    index,
+                                ) => (
                                     <li
                                         key={step}
                                         className="flex items-center gap-2 text-sm font-medium text-indigo-500"
                                     >
                                         <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
-                                            {index + 1}
+                                            {index +
+                                                1}
                                         </span>
 
                                         {step}
@@ -823,10 +975,9 @@ export default function SettlementPage() {
                             </th>
 
                             <th className="px-5 py-3 text-right font-medium">
-                                반환 금액
+                                반환 / 추가 지출
                             </th>
 
-                            {/* 추가 */}
                             <th className="px-5 py-3 text-center font-medium">
                                 상세조회
                             </th>
@@ -835,88 +986,122 @@ export default function SettlementPage() {
 
                         <tbody>
                         {changes.length > 0 ? (
-                            changes.map((change) => {
-                                const approvedAmount =
-                                    change.changeBudget;
+                            changes.map(
+                                (change) => {
+                                    const approvedAmount =
+                                        change.changeBudget;
 
-                                const spentAmount =
-                                    change.changedBudget;
+                                    const spentAmount =
+                                        change.changedBudget;
 
-                                const refundAmount =
-                                    Math.max(
+                                    const balanceAmount =
                                         approvedAmount -
-                                        spentAmount,
-                                        0,
+                                        spentAmount;
+
+                                    const refundAmount =
+                                        Math.max(
+                                            balanceAmount,
+                                            0,
+                                        );
+
+                                    const additionalExpense =
+                                        Math.max(
+                                            -balanceAmount,
+                                            0,
+                                        );
+
+                                    return (
+                                        <tr
+                                            key={
+                                                change.id
+                                            }
+                                            className="border-b border-zinc-100 text-zinc-800"
+                                        >
+                                            {/* 정산일 */}
+                                            <td className="px-5 py-4 text-zinc-500">
+                                                {change.processedAt
+                                                    ? formatDate(
+                                                        change.processedAt,
+                                                    )
+                                                    : "-"}
+                                            </td>
+
+                                            {/* 내용 */}
+                                            <td className="px-5 py-4 font-semibold">
+                                                {change.reason ||
+                                                    "-"}
+                                            </td>
+
+                                            {/* 정산자 */}
+                                            <td className="px-5 py-4 text-zinc-600">
+                                                {change.userName ||
+                                                    "-"}
+                                            </td>
+
+                                            {/* 승인 금액 */}
+                                            <td className="px-5 py-4 text-right font-semibold">
+                                                {formatMoney(
+                                                    approvedAmount,
+                                                    currency,
+                                                )}
+                                            </td>
+
+                                            {/* 지출 금액 */}
+                                            <td className="px-5 py-4 text-right font-semibold">
+                                                {formatMoney(
+                                                    spentAmount,
+                                                    currency,
+                                                )}
+                                            </td>
+
+                                            {/* 반환 / 추가 지출 */}
+                                            <td className="px-5 py-4 text-right">
+                                                {refundAmount >
+                                                0 ? (
+                                                    <span className="font-semibold text-emerald-600">
+                                                            +
+                                                        {formatMoney(
+                                                            refundAmount,
+                                                            currency,
+                                                        )}
+                                                        </span>
+                                                ) : additionalExpense >
+                                                0 ? (
+                                                    <span className="font-semibold text-red-600">
+                                                            추가{" "}
+                                                        {formatMoney(
+                                                            additionalExpense,
+                                                            currency,
+                                                        )}
+                                                        </span>
+                                                ) : (
+                                                    <span className="text-zinc-400">
+                                                            −
+                                                        </span>
+                                                )}
+                                            </td>
+
+                                            {/* 상세조회 */}
+                                            <td className="px-5 py-4 text-center">
+                                                <Link
+                                                    href={`/rooms/${roomId}/settlements/${change.id}`}
+                                                    className="inline-flex items-center rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                                                >
+                                                    상세조회
+                                                </Link>
+                                            </td>
+                                        </tr>
                                     );
-
-                                return (
-                                    <tr
-                                        key={change.id}
-                                        className="border-b border-zinc-100 text-zinc-800"
-                                    >
-                                        <td className="px-5 py-4 text-zinc-500">
-                                            {change.processedAt
-                                                ? formatDate(
-                                                    change.processedAt,
-                                                )
-                                                : "-"}
-                                        </td>
-
-                                        <td className="px-5 py-4 font-semibold">
-                                            {change.reason || "-"}
-                                        </td>
-
-                                        <td className="px-5 py-4 text-zinc-600">
-                                            {change.userName || "-"}
-                                        </td>
-
-                                        <td className="px-5 py-4 text-right font-semibold">
-                                            {formatMoney(
-                                                approvedAmount,
-                                                currency,
-                                            )}
-                                        </td>
-
-                                        <td className="px-5 py-4 text-right font-semibold">
-                                            {formatMoney(
-                                                spentAmount,
-                                                currency,
-                                            )}
-                                        </td>
-
-                                        <td className="px-5 py-4 text-right">
-                                            {refundAmount > 0 ? (
-                                                <span className="font-semibold text-emerald-600">
-                                                        +
-                                                    {formatMoney(
-                                                        refundAmount,
-                                                        currency,
-                                                    )}
-                                                    </span>
-                                            ) : (
-                                                <span className="text-zinc-400">
-                                                        −
-                                                    </span>
-                                            )}
-                                        </td>
-                                        <td className="px-5 py-4 text-center">
-                                            <Link
-                                                href={`/rooms/${roomId}/settlements/${change.id}`}
-                                                className="inline-flex items-center rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-                                            >
-                                                상세조회
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                );
-                            })
+                                },
+                            )
                         ) : (
                             <tr>
                                 <td
-                                    colSpan={6}
+                                    colSpan={7}
                                     className="px-5 py-12 text-center text-sm text-zinc-500"
                                 >
-                                    아직 정산 내역이 없습니다.
+                                    아직 정산 내역이
+                                    없습니다.
                                 </td>
                             </tr>
                         )}
@@ -929,7 +1114,9 @@ export default function SettlementPage() {
                 정산 최종 확인 모달
             ========================== */}
             <ConfirmDialog
-                open={isConfirmDialogOpen}
+                open={
+                    isConfirmDialogOpen
+                }
                 title="정산 내용을 확인해주세요"
                 description="아래 내용이 맞는지 확인한 후 정산을 진행해주세요."
                 confirmLabel="정산하기"
@@ -937,10 +1124,14 @@ export default function SettlementPage() {
                 loading={submitting}
                 onCancel={() => {
                     if (!submitting) {
-                        setIsConfirmDialogOpen(false);
+                        setIsConfirmDialogOpen(
+                            false,
+                        );
                     }
                 }}
-                onConfirm={handleConfirmSettlement}
+                onConfirm={
+                    handleConfirmSettlement
+                }
             >
                 <div className="space-y-3">
                     {/* 선택한 승인 신청 */}
@@ -950,7 +1141,8 @@ export default function SettlementPage() {
                         </p>
 
                         <p className="mt-1 text-sm font-semibold text-zinc-800">
-                            {selectedRequest?.reason ?? "-"}
+                            {selectedRequest?.reason ??
+                                "-"}
                         </p>
                     </div>
 
@@ -982,17 +1174,57 @@ export default function SettlementPage() {
                         </span>
                     </div>
 
-                    {/* 반환 금액 */}
-                    <div className="flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-                        <span className="text-sm font-medium text-emerald-700">
-                            예산 반환 금액
+                    {/* 반환 / 추가 지출 */}
+                    <div
+                        className={`flex items-center justify-between rounded-xl px-4 py-3 ${
+                            refundAmount > 0
+                                ? "border border-emerald-100 bg-emerald-50"
+                                : additionalExpense >
+                                0
+                                    ? "border border-red-100 bg-red-50"
+                                    : "border border-zinc-200 bg-zinc-50"
+                        }`}
+                    >
+                        <span
+                            className={`text-sm font-medium ${
+                                refundAmount > 0
+                                    ? "text-emerald-700"
+                                    : additionalExpense >
+                                    0
+                                        ? "text-red-700"
+                                        : "text-zinc-500"
+                            }`}
+                        >
+                            {refundAmount > 0
+                                ? "예산 반환 금액"
+                                : additionalExpense >
+                                0
+                                    ? "추가 지출"
+                                    : "반환 / 추가 지출"}
                         </span>
 
-                        <span className="text-base font-extrabold text-emerald-700">
-                            {formatMoney(
-                                refundAmount,
-                                currency,
-                            )}
+                        <span
+                            className={`text-base font-extrabold ${
+                                refundAmount > 0
+                                    ? "text-emerald-700"
+                                    : additionalExpense >
+                                    0
+                                        ? "text-red-700"
+                                        : "text-zinc-500"
+                            }`}
+                        >
+                            {refundAmount > 0
+                                ? `+${formatMoney(
+                                    refundAmount,
+                                    currency,
+                                )}`
+                                : additionalExpense >
+                                0
+                                    ? `+${formatMoney(
+                                        additionalExpense,
+                                        currency,
+                                    )}`
+                                    : "−"}
                         </span>
                     </div>
 
