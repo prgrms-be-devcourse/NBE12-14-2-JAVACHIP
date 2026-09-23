@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import ConfirmDialog from "@/app/components/common/ConfigmDialog/ConfirmDialog";
@@ -824,6 +825,11 @@ export default function SettlementPage() {
                             <th className="px-5 py-3 text-right font-medium">
                                 반환 금액
                             </th>
+
+                            {/* 추가 */}
+                            <th className="px-5 py-3 text-center font-medium">
+                                상세조회
+                            </th>
                         </tr>
                         </thead>
 
@@ -892,6 +898,14 @@ export default function SettlementPage() {
                                                         −
                                                     </span>
                                             )}
+                                        </td>
+                                        <td className="px-5 py-4 text-center">
+                                            <Link
+                                                href={`/rooms/${roomId}/settlements/${change.id}`}
+                                                className="inline-flex items-center rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                                            >
+                                                상세조회
+                                            </Link>
                                         </td>
                                     </tr>
                                 );
