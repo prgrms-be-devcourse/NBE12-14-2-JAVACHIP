@@ -61,7 +61,7 @@ public class BudgetRequest {
     }
 
     public void changeToSettlement() {
-        if (!"APPROVED".equals(this.status)) {
+        if (!BudgetRequestType.APPROVE.name().equals(this.status)) {
             throw new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_APPROVED);
         }
 
@@ -83,6 +83,13 @@ public class BudgetRequest {
     public void rejectRequest(String rejectReason){
         this.status = BudgetRequestType.REJECT.name();
         this.rejectReason = rejectReason;
+    }
+
+    public void modifyRequest(String reason, Long requestedAmount){
+        this.reason = reason;
+        this.requestedAmount = requestedAmount;
+        this.status = BudgetRequestType.REQUEST.name();
+        this.rejectReason = "";
     }
 
 }
