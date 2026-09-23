@@ -61,7 +61,7 @@ public class BudgetRequest {
     }
 
     public void changeToSettlement() {
-        if (!"APPROVED".equals(this.status)) {
+        if (!BudgetRequestType.APPROVE.name().equals(this.status)) {
             throw new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_APPROVED);
         }
 
