@@ -25,7 +25,7 @@ public enum ErrorCode {
     INVITE_EXPIRED(HttpStatus.FORBIDDEN, "초대가 만료되어 모임에 참여할 수 없습니다."),
     INVITE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 초대장입니다."),
     USER_ALREADY_JOINED_ROOM(HttpStatus.CONFLICT, "이미 참여한 모임입니다."),
-    BUDGET_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 에산신청이 존재하지 않습니다."),
+    BUDGET_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 예산신청이 존재하지 않습니다."),
     BUDGET_REQUEST_NOT_APPROVED(HttpStatus.BAD_REQUEST, "승인된 예산 신청 건이 아닙니다."),
     SETTLEMENT_AMOUNT_EXCEEDS_APPROVED(HttpStatus.BAD_REQUEST,"승인된 금액을 초과하여 정산할 수 없습니다."),
     BUDGET_CHANGE_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 정산내역이 존재하지 않습니다."),
@@ -33,7 +33,8 @@ public enum ErrorCode {
     NOT_BUDGET_REQUESTER(HttpStatus.FORBIDDEN, "예산 신청자가 아닙니다."),
     ROOM_MANAGER_REQUIRED(HttpStatus.FORBIDDEN, "모임을 관리할 권한이 없습니다."),
     INVALID_AUTHORITY(HttpStatus.BAD_REQUEST,"변경할 수 없는 권한입니다."),
-    NOT_APPROVABLE(HttpStatus.FORBIDDEN, "정산, 승인 상태의 신청은 승인할 수 없습니다.");
+    NOT_APPROVABLE(HttpStatus.FORBIDDEN, "정산, 승인 상태의 신청은 승인할 수 없습니다."),
+    NOT_REJECTABLE(HttpStatus.FORBIDDEN, "정산, 반려 상태의 신청은 반려할 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

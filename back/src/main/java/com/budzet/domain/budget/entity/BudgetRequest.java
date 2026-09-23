@@ -74,11 +74,14 @@ public class BudgetRequest {
         this.requestedAmount = budgetChange.getChangeBudget();
     }
 
-    public void updateState(BudgetRequestType type){
-        if(this.status == BudgetRequestType.REQUEST.name() || this.status == BudgetRequestType.REJECT.name())
-            this.status = type.name();
-        else
-            throw new BusinessException(ErrorCode.NOT_APPROVABLE);
+    public void approveRequest(){
+        this.status = BudgetRequestType.APPROVE.name();
+        this.rejectReason = "";
+    }
+
+    public void rejectRequest(String rejectReason){
+        this.status = BudgetRequestType.REJECT.name();
+        this.rejectReason = rejectReason;
     }
 
 }

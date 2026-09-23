@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -121,11 +120,41 @@ public class BudgetRequestService {
         if(userRoomConnection.getAuthority() != Authority.OPERATOR)
             throw new BusinessException(ErrorCode.OWNER_REQUIRED);
 
+        BudgetRequest budgetRequest = budgetRequestRepository.findByIdAndRoomId(requestId, roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_FOUND));
+
+        String status = budgetRequest.getStatus();
+        if(BudgetRequestType.APPROVE.name().equals(status) || BudgetRequestType.SETTLEMENT.name().equals(status))
+            throw new BusinessException(ErrorCode.NOT_APPROVABLE);
+        else
+            budgetRequest.approveRequest();
+    }
+
+    /**
+     * 예산신청 반려
+     * @param roomId
+     * @param user
+     * @param requestId
+     */
+    @Transactional
+    public void rejectBudgetRequest(Long roomId, User user, Long requestId, String rejectReason){
+
+        userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
+
+        // 권한 확인
+        UserRoomConnection userRoomConnection =  userRoomConnectionRepository.findByUser_IdAndRoom_Id(user.getId(), roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM));
+        if(userRoomConnection.getAuthority() != Authority.OPERATOR)
+            throw new BusinessException(ErrorCode.OWNER_REQUIRED);
 
         BudgetRequest budgetRequest = budgetRequestRepository.findByIdAndRoomId(requestId, roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_FOUND));
 
-        budgetRequest.updateState(BudgetRequestType.APPROVE);
+        String status = budgetRequest.getStatus();
+        if(BudgetRequestType.REJECT.name().equals(status) || BudgetRequestType.SETTLEMENT.name().equals(status))
+            throw new BusinessException(ErrorCode.NOT_REJECTABLE);
+        else
+            budgetRequest.rejectRequest(rejectReason);
     }
 
 }
