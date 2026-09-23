@@ -43,3 +43,19 @@ export async function login(request: UserLoginRequest) {
         },
     );
 }
+
+export async function logout() {
+    return apiFetch<void>(
+        "/users/logout",
+        {
+            method: "DELETE",
+            redirectOnUnauthorized: false,
+        },
+    );
+}
+
+export async function getMe() {
+    return apiFetch<User>(
+        "/users/me",
+    );
+}
