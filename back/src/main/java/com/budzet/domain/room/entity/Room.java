@@ -136,7 +136,7 @@ public class Room {
         }
 
         public void updateAvailableBudget(Long changeBudget){
-            this.availableBudget += changeBudget;
+            this.availableBudget = this.availableBudget + changeBudget;
         }
 
     }
