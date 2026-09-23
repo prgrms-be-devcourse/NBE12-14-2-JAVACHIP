@@ -60,11 +60,12 @@ public class BudgetRequest {
         this.status = BudgetRequestType.REQUEST.name();
     }
 
-    //todo 신청 상태 enum으로 변경 시 수정
-    public void changeToSettlement(String status) {
+    public void changeToSettlement() {
         if (!"APPROVED".equals(this.status)) {
             throw new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_APPROVED);
         }
+
+        this.status = BudgetRequestType.SETTLEMENT.name();
     }
 
     public void updateRequest(BudgetChange budgetChange, User user){

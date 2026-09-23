@@ -1,9 +1,6 @@
 package com.budzet.domain.user.controller;
 
-import com.budzet.domain.user.dto.UserDto;
-import com.budzet.domain.user.dto.UserJoinRequest;
-import com.budzet.domain.user.dto.UserLoginRequest;
-import com.budzet.domain.user.dto.UserLoginResponse;
+import com.budzet.domain.user.dto.*;
 import com.budzet.domain.user.entity.User;
 import com.budzet.domain.user.service.UserService;
 import com.budzet.global.api.ApiResponse;
@@ -16,10 +13,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,12 +25,12 @@ public class UserController {
 
 
     @PostMapping("/join")
-    public ApiResponse<UserDto> join(
+    public ResponseEntity<ApiResponse<UserDto>> join(
             @RequestBody @Valid UserJoinRequest reqBody
     ){
         User user = userService.join(reqBody.email(), reqBody.password(), reqBody.name());
 
-        return ApiResponse.success(
+        return ApiResponse.response(
                 HttpStatus.CREATED,
                 "회원가입이 완료되었습니다.",
                 new UserDto(user)
@@ -44,22 +38,66 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ApiResponse<UserLoginResponse> login(
+    public ResponseEntity<ApiResponse<UserLoginResponse>> login(
             @RequestBody @Valid UserLoginRequest reqBody
     ){
-        User actor = userService.findByEmail(reqBody.email()).orElseThrow(
-                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
-        );
+        UserLoginResponse response = userService.login(reqBody.email(), reqBody.password());
 
-        userService.checkPassword(reqBody.password(), actor.getPassword());
+        rq.addCookie("accessToken", response.accessToken());
+        rq.addCookie("refreshToken", response.refreshToken());
 
-        String accessToken = userService.genAccessToken(actor);
-        rq.addCookie("accessToken", accessToken);
-
-        return ApiResponse.success(
+        return ApiResponse.response(
                 HttpStatus.OK,
                 "로그인에 성공했습니다.",
-                UserLoginResponse.from(actor, accessToken)
+                response
+        );
+    }
+
+    @DeleteMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(){
+        User actor = rq.getActor();
+
+        userService.logout(actor.getId());
+
+        rq.deleteCookie("accessToken");
+        rq.deleteCookie("refreshToken");
+
+        return ApiResponse.response(
+                HttpStatus.OK,
+                "로그아웃되었습니다.",
+                null
+        );
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refresh( ){
+        String headerAuthorization = rq.getHeader("Authorization", "");
+
+        String refreshToken = null;
+
+        if(!headerAuthorization.isBlank()){
+            if(!headerAuthorization.startsWith("Bearer ")){
+                throw new BusinessException(ErrorCode.INVALID_AUTHORIZATION_HEADER);
+            }
+
+            refreshToken = headerAuthorization.substring(7);
+        }else {
+            refreshToken = rq.getCookieValue("refreshToken", "");
+        }
+
+        if(refreshToken.isBlank()){
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        TokenRefreshResponse tokenResponse = userService.refresh(refreshToken);
+
+        rq.addCookie("accessToken", tokenResponse.accessToken());
+        rq.addCookie("refreshToken", tokenResponse.refreshToken());
+
+        return ApiResponse.response(
+                HttpStatus.OK,
+                "토큰 재발급 성공",
+                tokenResponse
         );
     }
 

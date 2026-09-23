@@ -73,7 +73,7 @@ class CustomAuthenticationFilterTest {
         when(rq.getHeader("Authorization", ""))
                 .thenReturn("Bearer " + accessToken);
 
-        when(userService.payloadOrNull(accessToken))
+        when(userService.accessPayloadOrNull(accessToken))
                 .thenReturn(Map.of(
                         "id", 1L,
                         "name", "홍길동"
@@ -123,7 +123,7 @@ class CustomAuthenticationFilterTest {
         when(rq.getCookieValue("accessToken", ""))
                 .thenReturn(accessToken);
 
-        when(userService.payloadOrNull(accessToken))
+        when(userService.accessPayloadOrNull(accessToken))
                 .thenReturn(Map.of(
                         "id", 1L,
                         "name", "홍길동"
@@ -172,7 +172,7 @@ class CustomAuthenticationFilterTest {
         verify(filterChain).doFilter(request, response);
 
         verify(userService, never())
-                .payloadOrNull(anyString());
+                .accessPayloadOrNull(anyString());
     }
 
     @Test
@@ -185,7 +185,7 @@ class CustomAuthenticationFilterTest {
         when(rq.getHeader("Authorization", ""))
                 .thenReturn("Bearer " + accessToken);
 
-        when(userService.payloadOrNull(accessToken))
+        when(userService.accessPayloadOrNull(accessToken))
                 .thenReturn(null);
 
         // when

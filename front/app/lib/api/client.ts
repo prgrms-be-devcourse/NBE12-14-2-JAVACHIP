@@ -55,6 +55,10 @@ export async function apiFetch<T>(
     throw new ApiError("서버와 연결할 수 없습니다.", 0);
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   const responseBody = await response.json().catch(() => null) as ApiResponse<T> | null;
 
   if (!response.ok) {

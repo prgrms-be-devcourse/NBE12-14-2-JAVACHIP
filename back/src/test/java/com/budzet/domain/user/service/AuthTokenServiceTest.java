@@ -20,13 +20,13 @@ class AuthTokenServiceTest {
 
         ReflectionTestUtils.setField(
                 authTokenService,
-                "secretPattern",
+                "accessSecret",
                 "test-secret-key-for-budzet-jwt-authentication-123456789"
         );
 
         ReflectionTestUtils.setField(
                 authTokenService,
-                "expireMillis",
+                "accessExpireMillis",
                 3600L
         );
     }
@@ -49,11 +49,10 @@ class AuthTokenServiceTest {
         assertNotNull(accessToken);
 
         Map<String, Object> payload =
-                authTokenService.payloadOrNull(accessToken);
+                authTokenService.accessPayloadOrNull(accessToken);
 
         assertNotNull(payload);
         assertEquals(1L, payload.get("id"));
-        assertEquals("user1", payload.get("name"));
     }
 
     @Test
@@ -63,7 +62,7 @@ class AuthTokenServiceTest {
         String invalidToken = "invalid.jwt.token";
 
         Map<String, Object> payload =
-                authTokenService.payloadOrNull(invalidToken);
+                authTokenService.accessPayloadOrNull(invalidToken);
 
         assertNull(payload);
     }
