@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 import { getMe, logout } from "../../lib/api/userApi";
 import { getMembers, getRoom } from "../../lib/api/roomsApi";
+import { getBudgetRequests } from "../../lib/api/budgetRequestApi";
 
 type IconName =
     | "dashboard"
@@ -24,14 +25,13 @@ const navigation: {
     label: string;
     path: string;
     icon: IconName;
-    badge?: string;
 }[] = [
     { label: "대시보드", path: "dashboard", icon: "dashboard" },
     { label: "예산 신청", path: "budget-requests", icon: "request" },
     { label: "정산하기", path: "settlements", icon: "settlement" },
     { label: "멤버", path: "members", icon: "members" },
     { label: "초대하기", path: "invite/create", icon: "invite" },
-    { label: "승인 관리", path: "approvals", icon: "approval", badge: "2" },
+    { label: "승인 관리", path: "approvals", icon: "approval" },
 ];
 
 function Icon({
@@ -61,39 +61,48 @@ function Icon({
                 <rect x="14" y="14" width="7" height="7" rx="1" />
             </>
         ),
+
         request: (
             <>
                 <rect x="5" y="3" width="14" height="18" rx="2" />
                 <path d="M8 8h8M8 12h8M8 16h4" />
             </>
         ),
+
         settlement: (
             <>
                 <path d="M5 4h14v16H5z" />
                 <path d="M8 8h8M8 12l2 2 4-4M8 17h5" />
             </>
         ),
+
         members: (
             <>
                 <circle cx="9" cy="8" r="3" />
                 <path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 11a3 3 0 1 0-1.8-5.4M16 14a5 5 0 0 1 4.5 3" />
             </>
         ),
+
         invite: (
             <>
                 <path d="M10.5 13.5a4 4 0 0 0 5.7.1l2.1-2.1a4 4 0 0 0-5.7-5.7l-1.2 1.2" />
                 <path d="M13.5 10.5a4 4 0 0 0-5.7-.1l-2.1 2.1a4 4 0 1 0 5.7 5.7l1.2-1.2" />
             </>
         ),
+
         approval: (
             <>
                 <circle cx="12" cy="12" r="8.5" />
                 <path d="m8.5 12 2.3 2.3 4.8-5" />
             </>
         ),
+
         menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+
         close: <path d="m6 6 12 12M18 6 6 18" />,
+
         chevron: <path d="m9 18-6-6 6-6" />,
+
         back: <path d="m15 18-6-6 6-6" />,
     };
 
@@ -105,11 +114,13 @@ function Sidebar({
                      roomName,
                      userName,
                      userRole,
+                     pendingRequestCount,
                  }: {
     onNavigate?: () => void;
     roomName: string;
     userName: string;
     userRole: string;
+    pendingRequestCount: number;
 }) {
     const pathname = usePathname();
 
@@ -140,13 +151,13 @@ function Sidebar({
                 type="button"
                 className="mb-6 flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-zinc-50"
             >
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-base font-bold text-white">
-          {roomName.charAt(0) || "모"}
-        </span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-base font-bold text-white">
+                    {roomName.charAt(0) || "모"}
+                </span>
 
                 <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-zinc-800">
-          {roomName}
-        </span>
+                    {roomName}
+                </span>
 
                 <Icon name="chevron" className="h-4 w-4 text-zinc-400" />
             </button>
@@ -174,11 +185,12 @@ function Sidebar({
 
                             <span className="flex-1">{item.label}</span>
 
-                            {item.badge && (
-                                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 text-xs font-semibold text-amber-700">
-                  {item.badge}
-                </span>
-                            )}
+                            {item.path === "approvals" &&
+                                pendingRequestCount > 0 && (
+                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 text-xs font-semibold text-amber-700">
+                                        {pendingRequestCount}
+                                    </span>
+                                )}
                         </Link>
                     );
                 })}
@@ -187,9 +199,9 @@ function Sidebar({
             {/* 현재 로그인한 사용자 */}
             <div className="mt-auto border-t border-zinc-100 px-2 pt-4">
                 <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 text-sm font-semibold text-white">
-            {userName.charAt(0) || "?"}
-          </span>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 text-sm font-semibold text-white">
+                        {userName.charAt(0) || "?"}
+                    </span>
 
                     <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-zinc-800">
@@ -232,6 +244,9 @@ export default function WorkspaceShell({
     // 현재 로그인한 사용자 정보
     const [userName, setUserName] = useState("");
     const [userRole, setUserRole] = useState("");
+
+    // 승인 요청 개수
+    const [pendingRequestCount, setPendingRequestCount] = useState(0);
 
     useEffect(() => {
         if (!roomId || Number.isNaN(roomId)) {
@@ -283,16 +298,44 @@ export default function WorkspaceShell({
         void loadWorkspace();
     }, [roomId]);
 
+    useEffect(() => {
+        if (!roomId || Number.isNaN(roomId)) {
+            return;
+        }
+
+        const loadPendingRequestCount = async () => {
+            try {
+                const requests = await getBudgetRequests(roomId);
+
+                const requestCount = requests.filter(
+                    (request) => request.status === "REQUEST",
+                ).length;
+
+                setPendingRequestCount(requestCount);
+            } catch (error) {
+                console.error(
+                    "승인 요청 개수를 불러오지 못했습니다.",
+                    error,
+                );
+            }
+        };
+
+        void loadPendingRequestCount();
+    }, [roomId]);
+
     return (
         <div className="min-h-screen bg-[#f8f8fb] text-zinc-900">
+            {/* PC 사이드바 */}
             <div className="fixed inset-y-0 left-0 z-20 hidden md:block">
                 <Sidebar
                     roomName={roomName}
                     userName={userName}
                     userRole={userRole}
+                    pendingRequestCount={pendingRequestCount}
                 />
             </div>
 
+            {/* 모바일 헤더 */}
             <header className="sticky top-0 z-10 flex h-16 items-center border-b border-zinc-200 bg-white px-4 md:hidden">
                 <button
                     type="button"
@@ -304,10 +347,11 @@ export default function WorkspaceShell({
                 </button>
 
                 <span className="ml-3 truncate text-sm font-semibold">
-          {roomName}
-        </span>
+                    {roomName}
+                </span>
             </header>
 
+            {/* 모바일 사이드바 */}
             {isOpen && (
                 <div className="fixed inset-0 z-30 md:hidden">
                     <button
@@ -331,6 +375,7 @@ export default function WorkspaceShell({
                             roomName={roomName}
                             userName={userName}
                             userRole={userRole}
+                            pendingRequestCount={pendingRequestCount}
                             onNavigate={() => setIsOpen(false)}
                         />
                     </div>
