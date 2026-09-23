@@ -1,5 +1,6 @@
 package com.budzet.domain.budget.controller;
 
+import com.budzet.domain.budget.dto.BudgetRequestModifyRequest;
 import com.budzet.domain.budget.dto.BudgetRequestRejectRequest;
 import com.budzet.domain.budget.dto.BudgetRequestResponse;
 import com.budzet.domain.budget.dto.BudgetRequestRequest;
@@ -102,6 +103,7 @@ public class BudgetRequestController {
      * 예산신청 반려
      * @param roomId
      * @param requestId
+     * @param request
      * @return 예산신청 상세정보
      */
     @PatchMapping("/{roomId}/budget/request/{requestId}/reject")
@@ -113,6 +115,24 @@ public class BudgetRequestController {
         User user = rq.getActor();
         budgetRequestService.rejectBudgetRequest(roomId, user, requestId, request.rejectReason());
         return ApiResponse.response(HttpStatus.NO_CONTENT, "예산신청 반려성공", null);
+    }
+
+    /**
+     * 예산신청 수정
+     * @param roomId
+     * @param requestId
+     * @param request
+     * @return 예산신청 상세정보
+     */
+    @PatchMapping("/{roomId}/budget/request/{requestId}/modify")
+    public ResponseEntity<ApiResponse<Object>> modifyBudgetRequest(
+            @PathVariable Long roomId,
+            @PathVariable Long requestId,
+            @Valid @RequestBody BudgetRequestModifyRequest request
+    ){
+        User user = rq.getActor();
+        budgetRequestService.modifyBudgetRequest(roomId, user, requestId, request.reason(), request.rerequestedAmount());
+        return ApiResponse.response(HttpStatus.NO_CONTENT, "예산신청 수정성공", null);
     }
 
 }

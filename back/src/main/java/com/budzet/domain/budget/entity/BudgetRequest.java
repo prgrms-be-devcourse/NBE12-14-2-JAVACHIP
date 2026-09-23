@@ -84,4 +84,11 @@ public class BudgetRequest {
         this.rejectReason = rejectReason;
     }
 
+    public void modifyRequest(String reason, Long requestedAmount){
+        this.reason = reason;
+        this.requestedAmount = requestedAmount;
+        this.status = BudgetRequestType.REQUEST.name();
+        this.rejectReason = "";
+    }
+
 }

@@ -157,4 +157,37 @@ public class BudgetRequestService {
             budgetRequest.rejectRequest(rejectReason);
     }
 
+    /**
+     * 예산신청 수정
+     * @param roomId
+     * @param user
+     * @param requestId
+     * @param reason
+     * @param requestedAmount
+     */
+    @Transactional
+    public void modifyBudgetRequest(Long roomId, User user, Long requestId, String reason, Long requestedAmount){
+
+        userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
+
+        BudgetRequest budgetRequest = budgetRequestRepository.findByIdAndRoomId(requestId, roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_FOUND));
+
+        Room room = this.roomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+
+        String status = budgetRequest.getStatus();
+        if(BudgetRequestType.SETTLEMENT.name().equals(status))
+            throw new BusinessException(ErrorCode.NOT_MODIFYABLE);
+        else if(room.getAvailableBudget() + budgetRequest.getRequestedAmount() < requestedAmount)
+            throw new BusinessException(ErrorCode.REQUEST_AMOUNT_OVER_BUDGET);
+        else if (budgetRequest.getUser().getId() != user.getId())
+            throw new BusinessException(ErrorCode.NOT_BUDGET_REQUESTER);
+        else{
+            if(budgetRequest.getStatus().equals(BudgetRequestType.APPROVE.name()))
+                room.updateAvailableBudget(budgetRequest.getRequestedAmount() - requestedAmount);
+            budgetRequest.modifyRequest(reason, requestedAmount);
+        }
+    }
+
 }
