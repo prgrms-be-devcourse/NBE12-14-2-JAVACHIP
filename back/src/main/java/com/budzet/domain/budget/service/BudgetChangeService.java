@@ -65,9 +65,8 @@ public class BudgetChangeService {
         );
         budgetChange.addBudgetRequest(budgetRequest);
 
-        //todo 상태 타입 확인 후 변경 (String, enum)
         //신청 상태 변경 승인 -> 정산
-        budgetRequest.changeToSettlement("SETTLEMENT");
+        budgetRequest.changeToSettlement();
 
         //실제 예산 변경처리
         room.settleBudget(budgetChange.getChangeBudget(), budgetChange.getChangedBudget());
