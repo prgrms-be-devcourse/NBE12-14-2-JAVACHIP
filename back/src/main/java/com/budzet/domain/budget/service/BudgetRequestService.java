@@ -126,7 +126,7 @@ public class BudgetRequestService {
         // 권한 확인
         UserRoomConnection userRoomConnection = userRoomConnectionRepository.findByUser_IdAndRoom_Id(user.getId(), roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM));
-        if(userRoomConnection.getAuthority() != Authority.OPERATOR)
+        if(userRoomConnection.getAuthority() == Authority.MEMBER)
             throw new BusinessException(ErrorCode.OWNER_REQUIRED);
 
         BudgetRequest budgetRequest = budgetRequestRepository.findByIdAndRoomId(requestId, roomId)
@@ -162,7 +162,7 @@ public class BudgetRequestService {
         // 권한 확인
         UserRoomConnection userRoomConnection =  userRoomConnectionRepository.findByUser_IdAndRoom_Id(user.getId(), roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM));
-        if(userRoomConnection.getAuthority() != Authority.OPERATOR)
+        if(userRoomConnection.getAuthority() == Authority.MEMBER)
             throw new BusinessException(ErrorCode.OWNER_REQUIRED);
 
         BudgetRequest budgetRequest = budgetRequestRepository.findByIdAndRoomId(requestId, roomId)
