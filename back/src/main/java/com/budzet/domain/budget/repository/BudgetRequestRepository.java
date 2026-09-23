@@ -17,7 +17,7 @@ public interface BudgetRequestRepository extends JpaRepository<BudgetRequest, Lo
      * @return 예산신청 목록
      */
     @Query("select new com.budzet.domain.budget.dto.BudgetRequestResponse(" +
-            "br.id, br.room.id, br.user.id, br.reason, br.requestedAmount, br.status, br.rejectReason, br.createdAt, br.updatedAt) " +
+            "br.id, br.room.id, br.user.id, br.userName, br.reason, br.requestedAmount, br.status, br.rejectReason, br.createdAt, br.updatedAt) " +
             "from BudgetRequest br " +
             "where br.room.id = :roomId")
     List<BudgetRequestResponse> findDtoByRoomId(@Param("roomId") Long roomId);
@@ -29,7 +29,7 @@ public interface BudgetRequestRepository extends JpaRepository<BudgetRequest, Lo
      * @return 예산신청 단일항목
      */
     @Query("select new com.budzet.domain.budget.dto.BudgetRequestResponse(" +
-            "br.id, br.room.id, br.user.id, br.reason, br.requestedAmount, br.status, br.rejectReason, br.createdAt, br.updatedAt) " +
+            "br.id, br.room.id, br.user.id, br.userName, br.reason, br.requestedAmount, br.status, br.rejectReason, br.createdAt, br.updatedAt) " +
             "from BudgetRequest br " +
             "where br.room.id = :roomId and br.id = :requestId")
     BudgetRequestResponse findDtoById(@Param("roomId") Long roomId, @Param("requestId") Long requestId);
