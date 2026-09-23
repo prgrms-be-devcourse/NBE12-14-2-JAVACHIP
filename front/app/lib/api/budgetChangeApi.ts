@@ -35,7 +35,7 @@ export type BudgetChangeDetailResponse = {
     id: number;
     roomId: number;
     userId: number;
-    requestId: number;
+    requestId: number | null;
     changeBudget: number;
     changedBudget: number;
     budgetType: string;
@@ -43,8 +43,8 @@ export type BudgetChangeDetailResponse = {
     userName: string;
     userEmail: string;
     reason: string;
-    requestCreatedAt: string;
-    requestUpdatedAt: string;
+    requestCreatedAt: string | null;
+    requestUpdatedAt: string | null;
 };
 
 export type BudgetChangeUpdateRequest = {

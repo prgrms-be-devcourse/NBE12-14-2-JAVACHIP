@@ -3,6 +3,7 @@ package com.budzet.domain.budget.service;
 import com.budzet.domain.budget.dto.*;
 import com.budzet.domain.budget.entity.BudgetChange;
 import com.budzet.domain.budget.entity.BudgetRequest;
+import com.budzet.domain.budget.entity.BudgetRequestType;
 import com.budzet.domain.budget.entity.BudgetType;
 import com.budzet.domain.budget.repository.BudgetChangeRepository;
 import com.budzet.domain.budget.repository.BudgetRequestRepository;
@@ -45,7 +46,7 @@ public class BudgetChangeService {
         }
 
         //승인된 요청이 아닐 때 예외처리
-        if(!"APPROVED".equals(budgetRequest.getStatus())){
+        if(!BudgetRequestType.APPROVE.name().equals(budgetRequest.getStatus())){
             throw new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_APPROVED);
         }
 
