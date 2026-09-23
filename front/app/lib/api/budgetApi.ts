@@ -14,6 +14,7 @@ export type Budget = {
 
 export type BudgetHistoryItem = {
   id: number;
+  changeBudget: number;
   changedBudget: number;
   type: BudgetType;
   userName: string;
