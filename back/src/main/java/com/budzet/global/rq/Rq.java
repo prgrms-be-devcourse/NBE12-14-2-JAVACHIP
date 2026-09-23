@@ -52,6 +52,17 @@ public class Rq {
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
+    public void deleteCookie(String name) {
+        ResponseCookie cookie = ResponseCookie.from(name, "")
+                .path("/")
+                .httpOnly(true)
+                .sameSite("Lax")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
     public String getHeader(String name, String defaultValue){
         return Optional
                 .ofNullable(request.getHeader(name))

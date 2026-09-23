@@ -31,6 +31,9 @@ public class User {
     @Column(length = 50)
     private String name;
 
+    @Column(length = 512)
+    private String refreshToken;
+
     @CreatedDate
     private LocalDateTime createdAt;
 
@@ -44,5 +47,13 @@ public class User {
         this.email = email;
         this.password = password;
         this.name = name;
+    }
+
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void clearRefreshToken() {
+        this.refreshToken = null;
     }
 }

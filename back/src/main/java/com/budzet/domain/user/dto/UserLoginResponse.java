@@ -4,12 +4,14 @@ import com.budzet.domain.user.entity.User;
 
 public record UserLoginResponse(
         UserDto user,
-        String accessToken
+        String accessToken,
+        String refreshToken
 ) {
-    public static UserLoginResponse from(User user, String accessToken){
+    public static UserLoginResponse from(User user, String accessToken, String refreshToken){
         return new UserLoginResponse(
                 new UserDto(user),
-                accessToken
+                accessToken,
+                refreshToken
         );
     }
 }
