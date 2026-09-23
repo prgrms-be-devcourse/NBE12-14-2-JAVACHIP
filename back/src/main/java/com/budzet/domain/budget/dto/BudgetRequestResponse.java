@@ -6,6 +6,7 @@ public record BudgetRequestResponse(
         Long id,
         Long roomId,
         Long userId,
+        String userName,
         String reason,
         Long requestedAmount,
         String status,
