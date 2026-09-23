@@ -134,4 +134,9 @@ public class Room {
             this.totalBudget = this.totalBudget + updateChanged;
             this.availableBudget = this.availableBudget + updateChanged;
         }
+
+        public void updateAvailableBudget(Long changeBudget){
+            this.availableBudget = this.availableBudget + changeBudget;
+        }
+
     }

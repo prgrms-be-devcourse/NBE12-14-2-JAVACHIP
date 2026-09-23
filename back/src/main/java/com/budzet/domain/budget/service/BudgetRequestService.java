@@ -89,18 +89,27 @@ public class BudgetRequestService {
      * @param user
      * @param requestId
      */
+    @Transactional
     public void deleteBudgetRequest(Long roomId, User user, Long requestId){
 
         userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
 
         BudgetRequestResponse budgetRequestResponse= budgetRequestRepository.findDtoById(roomId, requestId);
 
+        Room room = this.roomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+
+
         if(budgetRequestResponse == null)
             throw new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_FOUND);
         else if (budgetRequestResponse.userId() != user.getId())
             throw new BusinessException(ErrorCode.NOT_BUDGET_REQUESTER);
-        else
+        else{
+            String status = budgetRequestResponse.status();
+            if(BudgetRequestType.APPROVE.name().equals(status))
+                room.updateAvailableBudget(budgetRequestResponse.requestedAmount());
             budgetRequestRepository.deleteById(requestId);
+        }
     }
 
     /**
@@ -115,19 +124,28 @@ public class BudgetRequestService {
         userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
 
         // 권한 확인
-        UserRoomConnection userRoomConnection =  userRoomConnectionRepository.findByUser_IdAndRoom_Id(user.getId(), roomId)
+        UserRoomConnection userRoomConnection = userRoomConnectionRepository.findByUser_IdAndRoom_Id(user.getId(), roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM));
-        if(userRoomConnection.getAuthority() != Authority.OPERATOR)
+        if(userRoomConnection.getAuthority() == Authority.MEMBER)
             throw new BusinessException(ErrorCode.OWNER_REQUIRED);
 
         BudgetRequest budgetRequest = budgetRequestRepository.findByIdAndRoomId(requestId, roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_FOUND));
 
+        Room room = this.roomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+
+
+
         String status = budgetRequest.getStatus();
         if(BudgetRequestType.APPROVE.name().equals(status) || BudgetRequestType.SETTLEMENT.name().equals(status))
             throw new BusinessException(ErrorCode.NOT_APPROVABLE);
-        else
+        else if(room.getAvailableBudget() < budgetRequest.getRequestedAmount())
+            throw new BusinessException(ErrorCode.BUDGET_EXCEEDED);
+        else{
+            room.updateAvailableBudget(-1 * budgetRequest.getRequestedAmount());
             budgetRequest.approveRequest();
+        }
     }
 
     /**
@@ -144,7 +162,7 @@ public class BudgetRequestService {
         // 권한 확인
         UserRoomConnection userRoomConnection =  userRoomConnectionRepository.findByUser_IdAndRoom_Id(user.getId(), roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_JOINED_ROOM));
-        if(userRoomConnection.getAuthority() != Authority.OPERATOR)
+        if(userRoomConnection.getAuthority() == Authority.MEMBER)
             throw new BusinessException(ErrorCode.OWNER_REQUIRED);
 
         BudgetRequest budgetRequest = budgetRequestRepository.findByIdAndRoomId(requestId, roomId)
@@ -155,6 +173,39 @@ public class BudgetRequestService {
             throw new BusinessException(ErrorCode.NOT_REJECTABLE);
         else
             budgetRequest.rejectRequest(rejectReason);
+    }
+
+    /**
+     * 예산신청 수정
+     * @param roomId
+     * @param user
+     * @param requestId
+     * @param reason
+     * @param requestedAmount
+     */
+    @Transactional
+    public void modifyBudgetRequest(Long roomId, User user, Long requestId, String reason, Long requestedAmount){
+
+        userInRoomCheck(new UserRoomConnectionId(user.getId(), roomId));
+
+        BudgetRequest budgetRequest = budgetRequestRepository.findByIdAndRoomId(requestId, roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_FOUND));
+
+        Room room = this.roomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+
+        String status = budgetRequest.getStatus();
+        if(BudgetRequestType.SETTLEMENT.name().equals(status))
+            throw new BusinessException(ErrorCode.NOT_MODIFYABLE);
+        else if(room.getAvailableBudget() + budgetRequest.getRequestedAmount() < requestedAmount)
+            throw new BusinessException(ErrorCode.REQUEST_AMOUNT_OVER_BUDGET);
+        else if (budgetRequest.getUser().getId() != user.getId())
+            throw new BusinessException(ErrorCode.NOT_BUDGET_REQUESTER);
+        else{
+            if(budgetRequest.getStatus().equals(BudgetRequestType.APPROVE.name()))
+                room.updateAvailableBudget(budgetRequest.getRequestedAmount() - requestedAmount);
+            budgetRequest.modifyRequest(reason, requestedAmount);
+        }
     }
 
 }
