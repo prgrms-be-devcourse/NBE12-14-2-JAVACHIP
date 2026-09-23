@@ -2,7 +2,7 @@ import { apiFetch } from "./client";
 
 export type BudgetChangeCreateRequest = {
     changedBudget: number;
-    reason?: string;
+    reason: string;
 };
 
 export type BudgetChangeCreateResponse = {
@@ -19,6 +19,7 @@ export type BudgetChangeCreateResponse = {
 
 export type BudgetChange = {
     id: number;
+    changeBudget: number;
     changedBudget: number;
     type: string;
     userName: string;

@@ -101,4 +101,15 @@ public class UserController {
         );
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserDto>> me(){
+        User actor = rq.getActor();
+
+        return ApiResponse.response(
+                HttpStatus.OK,
+                "내 정보 조회에 성공했습니다.",
+                new UserDto(actor)
+        );
+    }
+
 }

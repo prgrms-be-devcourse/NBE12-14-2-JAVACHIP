@@ -19,6 +19,7 @@ public record BudgetChangeListResponse(
 
     public record ListItem(
             Long id,
+            Long changeBudget,
             Long changedBudget,
             BudgetType type,
             String userName,
@@ -29,6 +30,7 @@ public record BudgetChangeListResponse(
 
             return new ListItem(
                     budgetChange.getId(),
+                    budgetChange.getChangeBudget(),
                     budgetChange.getChangedBudget(),
                     budgetChange.getType(),
                     budgetChange.getUserName(),

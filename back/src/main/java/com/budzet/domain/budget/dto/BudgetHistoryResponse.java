@@ -22,6 +22,7 @@ public record BudgetHistoryResponse(
 
     public record HistoryItem(
             Long id,
+            Long changeBudget,
             Long changedBudget,
             String type,
             String userName,
@@ -31,6 +32,7 @@ public record BudgetHistoryResponse(
         public static HistoryItem from(BudgetChange budgetChange){
             return new HistoryItem(
                     budgetChange.getId(),
+                    budgetChange.getChangeBudget(),
                     budgetChange.getChangedBudget(),
                     budgetChange.getType().name(),
                     budgetChange.getUserName(),

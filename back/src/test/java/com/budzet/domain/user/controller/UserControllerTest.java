@@ -9,6 +9,7 @@ import com.budzet.global.exception.ErrorCode;
 import com.budzet.global.rq.Rq;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -250,5 +251,45 @@ class UserControllerTest {
 
         verify(rq).deleteCookie("accessToken");
         verify(rq).deleteCookie("refreshToken");
+    }
+
+    @Test
+    @DisplayName("내 정보 조회 성공")
+    void me_success() {
+
+        // given
+        UserService service = mock(UserService.class);
+        Rq rq = mock(Rq.class);
+
+        UserController controller =
+                new UserController(service, rq);
+
+        User user = mock(User.class);
+
+        when(user.getId()).thenReturn(1L);
+        when(user.getEmail()).thenReturn("user1@test.com");
+        when(user.getName()).thenReturn("user1");
+
+        when(rq.getActor())
+                .thenReturn(user);
+
+        // when
+        ResponseEntity<ApiResponse<UserDto>> response =
+                controller.me();
+
+        // then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        ApiResponse<UserDto> body = response.getBody();
+
+        assertNotNull(body);
+        assertEquals(200, body.resultCode());
+        assertEquals("내 정보 조회에 성공했습니다.", body.message());
+
+        assertEquals(1L, body.data().id());
+        assertEquals("user1@test.com", body.data().email());
+        assertEquals("user1", body.data().name());
+
+        verify(rq).getActor();
     }
 }
