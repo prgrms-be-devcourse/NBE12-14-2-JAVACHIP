@@ -6,7 +6,12 @@ import { useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "../common/ConfigmDialog/ConfirmDialog";
 import { deleteRoom, getRoom, updateRoom, type Room } from "../../lib/api/roomsApi";
 import { ApiError } from "../../lib/api/types";
-import {updateBudget, type BudgetType,} from "../../lib/api/budgetApi";
+import {
+  getBudgetHistory,
+  updateBudget,
+  type BudgetHistoryItem,
+  type BudgetType,
+} from "../../lib/api/budgetApi";
 
 function formatBudget(amount: number, currency: string) {
   const formatted = new Intl.NumberFormat("ko-KR").format(amount);
@@ -57,6 +62,10 @@ export default function RoomDetailPage() {
   const [budgetError, setBudgetError] = useState<string | null>(null);
   const [savingBudget, setSavingBudget] = useState(false);
   const [isBudgetHistoryOpen, setIsBudgetHistoryOpen] = useState(false);
+  const [budgetHistory, setBudgetHistory] = useState<BudgetHistoryItem[]>([]);
+  const [loadingBudgetHistory, setLoadingBudgetHistory] = useState(false);
+  const [budgetHistoryError, setBudgetHistoryError] = useState<string | null>(null);
+
 
   const loadRoom = async () => {
     if (roomId === null) return;
@@ -117,11 +126,52 @@ export default function RoomDetailPage() {
           setLoading(false);
         }
       });
-
     return () => {
       cancelled = true;
     };
   }, [roomId]);
+
+  const handleToggleBudgetHistory = async () => {
+    if (isBudgetHistoryOpen) {
+      setIsBudgetHistoryOpen(false);
+      return;
+    }
+
+    if (!room) return;
+
+    // 수정창이 열려 있다면 닫기
+    setIsEditingBudget(false);
+
+    setIsBudgetHistoryOpen(true);
+
+    if (budgetHistory.length > 0) {
+      return;
+    }
+
+    setLoadingBudgetHistory(true);
+    setBudgetHistoryError(null);
+
+    try {
+      const data = await getBudgetHistory(room.id);
+      setBudgetHistory(data.history);
+    } catch (caughtError) {
+      if (
+          caughtError instanceof ApiError &&
+          caughtError.status === 401
+      ) {
+        setRedirectingToLogin(true);
+        return;
+      }
+
+      setBudgetHistoryError(
+          caughtError instanceof ApiError
+              ? caughtError.message
+              : "예산 변경 내역을 불러오지 못했습니다.",
+      );
+    } finally {
+      setLoadingBudgetHistory(false);
+    }
+  };
 
   if (roomId === null) {
     return (
@@ -383,10 +433,123 @@ export default function RoomDetailPage() {
         </header>
 
         <section className="mt-10 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="budget-title">
-          <div className="mt-1 flex items-center gap-3"><h2 id="budget-title" className="text-xl font-bold">{room.name}의 예산</h2><button type="button" onClick={() => {if (isEditingBudget) {cancelEditingBudget();} else {startEditingBudget();}}} disabled={savingBudget} className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50">{isEditingBudget ? "예산 변경 닫기" : "예산 변경"}</button><button type="button" onClick={() => setIsBudgetHistoryOpen((prev) => !prev)} className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-50">{isBudgetHistoryOpen ? "예산 변경 내역 닫기" : "예산 변경 내역"}</button></div>
+          <div className="mt-1 flex items-center gap-3">
+            <h2 id="budget-title" className="text-xl font-bold">
+              {room.name}의 예산
+            </h2>
+
+            <button
+                type="button"
+                onClick={() => {
+                  if (isEditingBudget) {
+                    cancelEditingBudget();
+                  } else {
+                    setIsBudgetHistoryOpen(false);
+                    startEditingBudget();
+                  }
+                }}
+                disabled={savingBudget}
+                className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isEditingBudget ? "예산 변경 닫기" : "예산 변경"}
+            </button>
+
+            <button
+                type="button"
+                onClick={() => void handleToggleBudgetHistory()}
+                disabled={savingBudget}
+                className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isBudgetHistoryOpen
+                  ? "예산 변경 내역 닫기"
+                  : "예산 변경 내역"}
+            </button>
+          </div>
           <dl className="mt-8 grid gap-6 sm:grid-cols-3"><div><dt className="text-sm text-zinc-500">총 예산</dt><dd className="mt-2 text-2xl font-extrabold tracking-tight">{formatBudget(room.totalBudget, room.currency)}</dd></div><div><dt className="text-sm text-zinc-500">사용 금액</dt><dd className="mt-2 text-2xl font-extrabold tracking-tight text-indigo-600">{formatBudget(usedBudget, room.currency)}</dd></div><div><dt className="text-sm text-zinc-500">사용 가능</dt><dd className="mt-2 text-2xl font-extrabold tracking-tight text-emerald-600">{formatBudget(room.availableBudget, room.currency)}</dd></div></dl>
           <div className="mt-9"><div className="flex h-3 overflow-hidden rounded-full bg-zinc-100" aria-label={`${room.name} 예산 사용 현황`}><span className="bg-indigo-500" style={{ width: `${usedRate}%` }} /><span className="bg-emerald-100" style={{ width: `${availableRate}%` }} /></div><div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-zinc-500"><span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-indigo-500" />사용 금액</span><span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-emerald-300" />사용 가능</span></div></div>
         </section>
+        {isBudgetHistoryOpen && (
+            <section className="mt-5 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-indigo-600">
+                    예산 변경 내역
+                  </p>
+                  <h3 className="mt-1 text-xl font-bold">
+                    예산 변경 기록
+                  </h3>
+                </div>
+              </div>
+
+              {loadingBudgetHistory ? (
+                  <div className="mt-6 rounded-xl bg-zinc-50 px-4 py-10 text-center text-sm text-zinc-500">
+                    예산 변경 내역을 불러오는 중입니다.
+                  </div>
+              ) : budgetHistoryError ? (
+                  <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-4">
+                    <p className="text-sm font-medium text-red-600">
+                      {budgetHistoryError}
+                    </p>
+                  </div>
+              ) : budgetHistory.length === 0 ? (
+                  <div className="mt-6 rounded-xl bg-zinc-50 px-4 py-10 text-center">
+                    <p className="text-sm text-zinc-500">
+                      예산 변경 내역이 없습니다.
+                    </p>
+                  </div>
+              ) : (
+                  <div className="mt-6 overflow-hidden rounded-xl border border-zinc-200">
+                    <div className="hidden grid-cols-[120px_minmax(0,1fr)_100px_120px] border-b border-zinc-200 bg-zinc-50 px-5 py-3 text-xs font-semibold text-zinc-500 sm:grid">
+                      <span>변경일</span>
+                      <span>변경 사유</span>
+                      <span>변경자</span>
+                      <span className="text-right">증가/감소 금액</span>
+                    </div>
+
+                    <div className="divide-y divide-zinc-100">
+                      {budgetHistory.map((history) => (
+                          <div
+                              key={history.id}
+                              className="grid gap-3 px-5 py-4 sm:grid-cols-[120px_minmax(0,1fr)_100px_120px] sm:items-center"
+                          >
+                            <div className="text-sm text-zinc-500">
+                              {new Date(history.processedAt).toLocaleDateString(
+                                  "ko-KR",
+                              )}
+                            </div>
+
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium text-zinc-800">
+                                {history.reason || "사유 없음"}
+                              </p>
+                            </div>
+
+                            <div className="text-sm text-zinc-600">
+                              {history.userName}
+                            </div>
+
+                            <div className="text-right">
+                        <span
+                            className={`text-sm font-bold ${
+                                history.type === "INCREASE"
+                                    ? "text-emerald-600"
+                                    : "text-rose-600"
+                            }`}
+                        >
+                          {history.type === "INCREASE" ? "+" : "-"}
+                          {formatBudget(
+                              history.changeBudget,
+                              room.currency,
+                          )}
+                        </span>
+                            </div>
+                          </div>
+                      ))}
+                    </div>
+                  </div>
+              )}
+            </section>
+        )}
         {isEditingBudget && (
             <section className="mt-5 rounded-2xl border border-indigo-200 bg-white p-6 shadow-sm sm:p-8">
               <div className="flex items-start justify-between gap-4"><div><p className="text-sm font-medium text-indigo-600">예산 수정</p><h3 className="mt-1 text-xl font-bold">모임 예산 변경</h3><p className="mt-2 text-sm text-zinc-500">현재 총 예산은{" "}<span className="font-semibold text-zinc-700">{formatBudget(room.totalBudget, room.currency)}</span>입니다.</p></div><span className="shrink-0 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600">수정 가능</span></div><form onSubmit={(event) => void submitBudget(event)} className="mt-7 space-y-5">

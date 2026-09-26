@@ -1,7 +1,7 @@
 import { apiFetch } from "./client";
 
 export type BudgetCurrency = "KRW" | "USD" | "JPY";
-export type BudgetType = "SETTLEMENT" | "INCREASE" | "DECREASE";
+export type BudgetType = "INCREASE" | "DECREASE";
 
 export type Budget = {
   roomId: number;
