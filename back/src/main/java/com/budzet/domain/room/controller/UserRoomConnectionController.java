@@ -3,13 +3,17 @@ package com.budzet.domain.room.controller;
 import com.budzet.domain.room.dto.MemberResponse;
 import com.budzet.domain.room.service.UserRoomConnectionService;
 import com.budzet.global.api.ApiResponse;
+import com.budzet.global.rq.Rq;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import com.budzet.global.rq.Rq;
 
 import java.util.List;
 
+@Tag(name = "02 - 2. 멤버", description = "모임방 멤버 권한 조회/변경, 목록 조회, 강퇴 및 탈퇴 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/rooms")
@@ -18,6 +22,10 @@ public class UserRoomConnectionController {
     private final UserRoomConnectionService userRoomConnectionService;
     private final Rq rq;
 
+    @Operation(
+            summary = "멤버 권한 조회",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @GetMapping("/{roomId}/members/{userId}/authority")
     public ApiResponse<String> getAuthority(
             @PathVariable Long roomId,
@@ -35,6 +43,10 @@ public class UserRoomConnectionController {
         );
     }
 
+    @Operation(
+            summary = "멤버 목록 조회",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @GetMapping("/{roomId}/members")
     public ApiResponse<List<MemberResponse>> getMembers(
             @PathVariable Long roomId
@@ -49,6 +61,11 @@ public class UserRoomConnectionController {
         );
     }
 
+    @Operation(
+            summary = "멤버 강퇴",
+            description = "모임장, 운영자 권한 필요",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @DeleteMapping("/{roomId}/members/{userId}")
     public ApiResponse<Void> kickMember(
             @PathVariable Long roomId,
@@ -65,6 +82,10 @@ public class UserRoomConnectionController {
         );
     }
 
+    @Operation(
+            summary = "모임 탈퇴",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @DeleteMapping("/{roomId}/members/me")
     public ApiResponse<Void> leaveRoom(
             @PathVariable Long roomId

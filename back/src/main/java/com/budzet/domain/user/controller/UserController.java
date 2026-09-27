@@ -7,6 +7,9 @@ import com.budzet.global.api.ApiResponse;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import com.budzet.global.rq.Rq;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -16,8 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
-
+@Tag(name = "01. 회원 & 인증", description = "회원가입, 로그인/로그아웃, 내 정보 조회 및 토큰 재발급 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
@@ -33,6 +35,7 @@ public class UserController {
     private long refreshExpireMillis;
 
 
+    @Operation(summary = "회원가입")
     @PostMapping("/join")
     public ResponseEntity<ApiResponse<UserDto>> join(
             @RequestBody @Valid UserJoinRequest reqBody
@@ -46,6 +49,7 @@ public class UserController {
         );
     }
 
+    @Operation(summary = "로그인", description = "이메일과 비밀번호를 확인하여 로그인")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<UserLoginResponse>> login(
             @RequestBody @Valid UserLoginRequest reqBody
@@ -62,6 +66,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "로그아웃",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @DeleteMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(){
         User actor = rq.getActor();
@@ -78,6 +86,7 @@ public class UserController {
         );
     }
 
+    @Operation(summary = "인증 토큰 재발급", description = "access token과 refresh token을 재발급")
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<TokenRefreshResponse>> refresh( ){
         String headerAuthorization = rq.getHeader("Authorization", "");
@@ -110,6 +119,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "내 정보 조회",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserDto>> me(){
         User actor = rq.getActor();

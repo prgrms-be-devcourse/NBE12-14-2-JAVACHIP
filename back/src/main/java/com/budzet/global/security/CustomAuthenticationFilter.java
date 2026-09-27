@@ -30,6 +30,13 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        if (path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs") ||
+                path.equals("/swagger-ui.html")) {
+            return true;
+        }
         return List.of("/users/join",
                         "/users/login",
                         "/users/refresh")

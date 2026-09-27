@@ -1,27 +1,19 @@
 package com.budzet.domain.room.controller;
 
-import com.budzet.domain.room.dto.RoomCreateRequest;
-import com.budzet.domain.room.dto.RoomCreateResponse;
-import com.budzet.domain.room.dto.RoomDetailResponse;
-import com.budzet.domain.room.dto.RoomListResponse;
-import com.budzet.domain.room.dto.RoomUpdateRequest;
+import com.budzet.domain.room.dto.*;
 import com.budzet.domain.room.service.RoomService;
 import com.budzet.global.api.ApiResponse;
 import com.budzet.global.rq.Rq;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import com.budzet.domain.room.dto.AuthorityChangeRequest;
+import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "02 - 1. 모임방", description = "모임방 생성, 목록/상세 조회, 정보 수정, 삭제 및 권한 위임/지정 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/rooms")
@@ -30,6 +22,11 @@ public class RoomController {
     private final RoomService roomService;
     private final Rq rq;
 
+    @Operation(
+            summary = "모임 생성",
+            description = "새로운 모임을 생성, 생성한 사용자는 모임장이 된다.",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @PostMapping
     public ResponseEntity<ApiResponse<RoomCreateResponse>> createRoom(
             @RequestBody @Valid RoomCreateRequest request
@@ -44,6 +41,11 @@ public class RoomController {
         );
     }
 
+    @Operation(
+            summary = "모임 목록 조회",
+            description = "참여중인 모임 전체 조회",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @GetMapping
     public ResponseEntity<ApiResponse<RoomListResponse>> getRooms() {
         Long userId = rq.getActor().getId();
@@ -56,6 +58,10 @@ public class RoomController {
         );
     }
 
+    @Operation(
+            summary = "모임 상세 조회",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @GetMapping("/{roomId}")
     public ResponseEntity<ApiResponse<RoomDetailResponse>> getRoom(
             @PathVariable Long roomId
@@ -70,6 +76,11 @@ public class RoomController {
         );
     }
 
+    @Operation(
+            summary = "모임 정보 수정",
+            description = "모임장 권한 필요",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @PatchMapping("/{roomId}")
     public ResponseEntity<ApiResponse<RoomDetailResponse>> updateRoom(
             @PathVariable Long roomId,
@@ -85,6 +96,11 @@ public class RoomController {
         );
     }
 
+    @Operation(
+            summary = "모임 삭제",
+            description = "모임장 권한 필요",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @DeleteMapping("/{roomId}")
     public ResponseEntity<ApiResponse<Void>> deleteRoom(
             @PathVariable Long roomId
@@ -99,6 +115,11 @@ public class RoomController {
         );
     }
 
+    @Operation(
+            summary = "운영자 지정/해제",
+            description = "모임장 권한 필요",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @PatchMapping("/{roomId}/members/{userId}/authority")
     public ResponseEntity<ApiResponse<Void>> changeAuthority(
             @PathVariable Long roomId,
@@ -121,6 +142,11 @@ public class RoomController {
         );
     }
 
+    @Operation(
+            summary = "모임장 권한 위임",
+            description = "모임장 권한 필요",
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
     @PatchMapping("/{roomId}/members/{userId}/owner")
     public ResponseEntity<ApiResponse<Void>> delegateOwner(
             @PathVariable Long roomId,
