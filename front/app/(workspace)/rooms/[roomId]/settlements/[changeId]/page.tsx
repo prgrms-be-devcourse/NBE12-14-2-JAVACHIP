@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { getMe } from "@/app/lib/api/userApi";
+import { getMemberAuthority } from "@/app/lib/api/memberApi";
 
 import { ApiError } from "@/app/lib/api/types";
 
@@ -94,6 +96,10 @@ export default function SettlementDetailPage() {
     const [budget, setBudget] =
         useState<Budget | null>(null);
 
+    const [authority, setAuthority] = useState<
+        "OWNER" | "OPERATOR" | "MEMBER" | null
+    >(null);
+
     const [loading, setLoading] =
         useState(true);
 
@@ -121,16 +127,26 @@ export default function SettlementDetailPage() {
             const [
                 changeData,
                 budgetData,
+                me,
             ] = await Promise.all([
                 getBudgetChange(
                     roomId,
                     changeId,
                 ),
                 getBudget(roomId),
+                getMe(),
             ]);
+
+            const authorityData = await getMemberAuthority(
+                roomId,
+                me.id,
+            );
 
             setChange(changeData);
             setBudget(budgetData);
+            setAuthority(
+                authorityData as "OWNER" | "OPERATOR" | "MEMBER",
+            );
         } catch (caughtError) {
             setError(
                 getErrorMessage(caughtError),
@@ -164,13 +180,20 @@ export default function SettlementDetailPage() {
                 const [
                     changeData,
                     budgetData,
+                    me,
                 ] = await Promise.all([
                     getBudgetChange(
                         roomId,
                         changeId,
                     ),
                     getBudget(roomId),
+                    getMe(),
                 ]);
+
+                const authorityData = await getMemberAuthority(
+                    roomId,
+                    me.id,
+                );
 
                 if (cancelled) {
                     return;
@@ -178,6 +201,9 @@ export default function SettlementDetailPage() {
 
                 setChange(changeData);
                 setBudget(budgetData);
+                setAuthority(
+                    authorityData as "OWNER" | "OPERATOR" | "MEMBER",
+                );
             } catch (caughtError) {
                 if (!cancelled) {
                     setError(
@@ -263,13 +289,14 @@ export default function SettlementDetailPage() {
                         >
                             목록으로
                         </Link>
-
-                        <Link
-                            href={`/rooms/${roomId}/settlements/${changeId}/edit`}
-                            className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
-                        >
-                            수정
-                        </Link>
+                        {authority === "OWNER" && (
+                            <Link
+                                href={`/rooms/${roomId}/settlements/${changeId}/edit`}
+                                className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
+                            >
+                                수정
+                            </Link>
+                        )}
                     </div>
                 </div>
 

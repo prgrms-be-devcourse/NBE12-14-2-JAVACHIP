@@ -171,7 +171,7 @@ public class BudgetServiceTest {
         when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
                 .thenReturn(Optional.of(userRoomConnection));
 
-        when(budgetChangeRepository.findAllByRoomIdAndTypeInOrderByCreatedAtDesc(roomId,budGetTypes))
+        when(budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId))
                 .thenReturn(List.of(budgetChange));
         when(roomRepository.findById(roomId))
                 .thenReturn(Optional.of(room));
@@ -209,12 +209,12 @@ public class BudgetServiceTest {
         Long userId = 100L;
         Room room = mock(Room.class);
         UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
-        List<BudgetType> budGetTypes = List.of(BudgetType.INCREASE,BudgetType.DECREASE);
+//        List<BudgetType> budGetTypes = List.of(BudgetType.INCREASE,BudgetType.DECREASE);
 
         when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
                 .thenReturn(Optional.of(userRoomConnection));
 
-        when(budgetChangeRepository.findAllByRoomIdAndTypeInOrderByCreatedAtDesc(roomId,budGetTypes))
+        when(budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId))
                 .thenReturn(Collections.emptyList());
 
         when(roomRepository.findById(roomId))

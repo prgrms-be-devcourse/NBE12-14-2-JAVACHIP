@@ -5,7 +5,6 @@ import com.budzet.domain.budget.dto.BudgetResponse;
 import com.budzet.domain.budget.dto.BudgetUpdateRequest;
 import com.budzet.domain.budget.dto.BudgetUpdateResponse;
 import com.budzet.domain.budget.entity.BudgetChange;
-import com.budzet.domain.budget.entity.BudgetType;
 import com.budzet.domain.budget.repository.BudgetChangeRepository;
 import com.budzet.domain.room.entity.Authority;
 import com.budzet.domain.room.entity.Room;
@@ -44,10 +43,7 @@ public class BudgetService {
 
         validateRoomMember(roomId, userId);
         findByRoomId(roomId);
-        List<BudgetType> budGetTypes = List.of(BudgetType.INCREASE,BudgetType.DECREASE);
-        List<BudgetChange> budgetChanges = budgetChangeRepository.findAllByRoomIdAndTypeInOrderByCreatedAtDesc(
-                roomId,budGetTypes
-        );
+        List<BudgetChange> budgetChanges = budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId);
         return BudgetHistoryResponse.from(budgetChanges);
     }
 

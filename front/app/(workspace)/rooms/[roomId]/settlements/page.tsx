@@ -937,21 +937,28 @@ export default function SettlementPage() {
             </div>
 
             {/* =========================
-                정산 내역
-            ========================== */}
+    정산 내역
+========================== */}
             <section
                 aria-labelledby="settlements-title"
                 className="mt-7 max-w-4xl"
             >
-                <h2
-                    id="settlements-title"
-                    className="text-lg font-bold text-zinc-800"
-                >
-                    정산 내역
-                </h2>
+                <div className="flex items-end justify-between gap-4">
+                    <div>
+                        <h2
+                            id="settlements-title"
+                            className="text-lg font-bold text-zinc-800"
+                        >
+                            정산 내역
+                        </h2>
+                        <p className="mt-1 text-sm text-zinc-500">
+                            실제 지출한 금액을 기준으로 정산 내역을 확인할 수 있어요.
+                        </p>
+                    </div>
+                </div>
 
                 <div className="mt-3 overflow-x-auto rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                    <table className="min-w-190 w-full text-left text-sm">
+                    <table className="min-w-[620px] w-full text-left text-sm">
                         <thead className="border-b border-zinc-200 bg-zinc-50 text-zinc-500">
                         <tr>
                             <th className="px-5 py-3 font-medium">
@@ -967,15 +974,7 @@ export default function SettlementPage() {
                             </th>
 
                             <th className="px-5 py-3 text-right font-medium">
-                                승인 금액
-                            </th>
-
-                            <th className="px-5 py-3 text-right font-medium">
                                 지출 금액
-                            </th>
-
-                            <th className="px-5 py-3 text-right font-medium">
-                                반환 / 추가 지출
                             </th>
 
                             <th className="px-5 py-3 text-center font-medium">
@@ -986,122 +985,58 @@ export default function SettlementPage() {
 
                         <tbody>
                         {changes.length > 0 ? (
-                            changes.map(
-                                (change) => {
-                                    const approvedAmount =
-                                        change.changeBudget;
+                            changes.map((change) => (
+                                <tr
+                                    key={change.id}
+                                    className="border-b border-zinc-100 last:border-b-0 text-zinc-800"
+                                >
+                                    {/* 정산일 */}
+                                    <td className="px-5 py-4 whitespace-nowrap text-zinc-500">
+                                        {change.processedAt
+                                            ? formatDate(change.processedAt)
+                                            : "-"}
+                                    </td>
 
-                                    const spentAmount =
-                                        change.changedBudget;
+                                    {/* 내용 */}
+                                    <td className="px-5 py-4">
+                                        <p className="max-w-[280px] truncate font-semibold text-zinc-800">
+                                            {change.reason || "-"}
+                                        </p>
+                                    </td>
 
-                                    const balanceAmount =
-                                        approvedAmount -
-                                        spentAmount;
+                                    {/* 정산자 */}
+                                    <td className="px-5 py-4 whitespace-nowrap text-zinc-600">
+                                        {change.userName || "-"}
+                                    </td>
 
-                                    const refundAmount =
-                                        Math.max(
-                                            balanceAmount,
-                                            0,
-                                        );
+                                    {/* 실제 지출 금액 */}
+                                    <td className="px-5 py-4 text-right whitespace-nowrap">
+                                <span className="font-bold text-zinc-900">
+                                    {formatMoney(
+                                        change.changedBudget,
+                                        currency,
+                                    )}
+                                </span>
+                                    </td>
 
-                                    const additionalExpense =
-                                        Math.max(
-                                            -balanceAmount,
-                                            0,
-                                        );
-
-                                    return (
-                                        <tr
-                                            key={
-                                                change.id
-                                            }
-                                            className="border-b border-zinc-100 text-zinc-800"
+                                    {/* 상세조회 */}
+                                    <td className="px-5 py-4 text-center">
+                                        <Link
+                                            href={`/rooms/${roomId}/settlements/${change.id}`}
+                                            className="inline-flex items-center rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
                                         >
-                                            {/* 정산일 */}
-                                            <td className="px-5 py-4 text-zinc-500">
-                                                {change.processedAt
-                                                    ? formatDate(
-                                                        change.processedAt,
-                                                    )
-                                                    : "-"}
-                                            </td>
-
-                                            {/* 내용 */}
-                                            <td className="px-5 py-4 font-semibold">
-                                                {change.reason ||
-                                                    "-"}
-                                            </td>
-
-                                            {/* 정산자 */}
-                                            <td className="px-5 py-4 text-zinc-600">
-                                                {change.userName ||
-                                                    "-"}
-                                            </td>
-
-                                            {/* 승인 금액 */}
-                                            <td className="px-5 py-4 text-right font-semibold">
-                                                {formatMoney(
-                                                    approvedAmount,
-                                                    currency,
-                                                )}
-                                            </td>
-
-                                            {/* 지출 금액 */}
-                                            <td className="px-5 py-4 text-right font-semibold">
-                                                {formatMoney(
-                                                    spentAmount,
-                                                    currency,
-                                                )}
-                                            </td>
-
-                                            {/* 반환 / 추가 지출 */}
-                                            <td className="px-5 py-4 text-right">
-                                                {refundAmount >
-                                                0 ? (
-                                                    <span className="font-semibold text-emerald-600">
-                                                            +
-                                                        {formatMoney(
-                                                            refundAmount,
-                                                            currency,
-                                                        )}
-                                                        </span>
-                                                ) : additionalExpense >
-                                                0 ? (
-                                                    <span className="font-semibold text-red-600">
-                                                            추가{" "}
-                                                        {formatMoney(
-                                                            additionalExpense,
-                                                            currency,
-                                                        )}
-                                                        </span>
-                                                ) : (
-                                                    <span className="text-zinc-400">
-                                                            −
-                                                        </span>
-                                                )}
-                                            </td>
-
-                                            {/* 상세조회 */}
-                                            <td className="px-5 py-4 text-center">
-                                                <Link
-                                                    href={`/rooms/${roomId}/settlements/${change.id}`}
-                                                    className="inline-flex items-center rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-                                                >
-                                                    상세조회
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    );
-                                },
-                            )
+                                            상세조회
+                                        </Link>
+                                    </td>
+                                </tr>
+                            ))
                         ) : (
                             <tr>
                                 <td
-                                    colSpan={7}
+                                    colSpan={5}
                                     className="px-5 py-12 text-center text-sm text-zinc-500"
                                 >
-                                    아직 정산 내역이
-                                    없습니다.
+                                    아직 정산 내역이 없습니다.
                                 </td>
                             </tr>
                         )}
