@@ -61,10 +61,12 @@ public class BudgetChangeServiceTest {
         BudgetRequest budgetRequest = mock(BudgetRequest.class);
         Room room = mock(Room.class);
 
+        when(room.getId()).thenReturn(roomId);
         when(budgetService.validateRoomMember(roomId, userId)).thenReturn(connection);
         when(connection.getUser()).thenReturn(user);
 
         when(budgetRequestRepository.findById(requestId)).thenReturn(Optional.of(budgetRequest));
+        when(budgetRequest.getRoom()).thenReturn(room);
         when(budgetRequest.getUser()).thenReturn(user);
         when(user.getId()).thenReturn(userId);
         when(budgetRequest.getStatus()).thenReturn("APPROVE");
@@ -125,9 +127,13 @@ public class BudgetChangeServiceTest {
         UserRoomConnection connection = mock(UserRoomConnection.class);
         BudgetRequest budgetRequest = mock(BudgetRequest.class);
         User writerUser = mock(User.class);
+        Room room = mock(Room.class);
 
         when(budgetService.validateRoomMember(roomId, userId)).thenReturn(connection);
         when(budgetRequestRepository.findById(requestId)).thenReturn(Optional.of(budgetRequest));
+
+        when(budgetRequest.getRoom()).thenReturn(room);
+        when(room.getId()).thenReturn(roomId);
 
         when(budgetRequest.getUser()).thenReturn(writerUser);
         when(writerUser.getId()).thenReturn(otherUserId);
@@ -154,6 +160,10 @@ public class BudgetChangeServiceTest {
         User user = mock(User.class);
         UserRoomConnection connection = mock(UserRoomConnection.class);
         BudgetRequest budgetRequest = mock(BudgetRequest.class);
+        Room room = mock(Room.class);
+
+        when(budgetRequest.getRoom()).thenReturn(room);
+        when(room.getId()).thenReturn(roomId);
 
         when(budgetService.validateRoomMember(roomId, userId)).thenReturn(connection);
         when(budgetRequestRepository.findById(requestId)).thenReturn(Optional.of(budgetRequest));
