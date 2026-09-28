@@ -93,6 +93,12 @@ function BudgetContent({ roomId }: { roomId: number }) {
   const usedRate = room.totalBudget > 0 ? Math.max(0, Math.min(100, (usedBudget / room.totalBudget) * 100)) : 0;
   const availableRate = 100 - usedRate;
 
+  const filteredBudgetHistory = budgetHistory.filter(
+      (history) =>
+          history.type === "INCREASE" ||
+          history.type === "DECREASE",
+  );
+
   const cancelEditingBudget = () => {
     if (savingBudget) return;
     setBudgetInput("");
@@ -237,7 +243,7 @@ function BudgetContent({ roomId }: { roomId: number }) {
                       {budgetHistoryError}
                     </p>
                   </div>
-              ) : budgetHistory.length === 0 ? (
+              ) : filteredBudgetHistory.length === 0 ? (
                   <div className="mt-6 rounded-xl bg-zinc-50 px-4 py-10 text-center">
                     <p className="text-sm text-zinc-500">
                       예산 변경 내역이 없습니다.
@@ -253,7 +259,7 @@ function BudgetContent({ roomId }: { roomId: number }) {
                     </div>
 
                     <div className="divide-y divide-zinc-100">
-                      {budgetHistory.map((history) => (
+                      {filteredBudgetHistory.map((history) => (
                           <div
                               key={history.id}
                               className="grid gap-3 px-5 py-4 sm:grid-cols-[120px_minmax(0,1fr)_100px_120px] sm:items-center"
