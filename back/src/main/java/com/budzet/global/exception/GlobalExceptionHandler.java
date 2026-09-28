@@ -1,7 +1,9 @@
 package com.budzet.global.exception;
 
 import com.budzet.global.api.ApiResponse;
+import jakarta.persistence.LockTimeoutException;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -79,6 +81,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ErrorCode.BAD_REQUEST));
+    }
+
+    @ExceptionHandler({
+            PessimisticLockingFailureException.class,
+            LockTimeoutException.class
+    })
+    public ResponseEntity<ApiResponse<Void>> handleLockTimeoutException(
+            Exception exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ApiResponse.error(ErrorCode.LOCKED_RESOURCE));
     }
 
     // 그 외 에러는 `500`으로 응답

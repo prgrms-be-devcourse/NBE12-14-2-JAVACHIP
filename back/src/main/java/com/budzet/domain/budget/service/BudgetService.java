@@ -14,6 +14,9 @@ import com.budzet.domain.room.repository.UserRoomConnectionRepository;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,7 +49,12 @@ public class BudgetService {
         List<BudgetChange> budgetChanges = budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId);
         return BudgetHistoryResponse.from(budgetChanges);
     }
-
+    @Retryable(
+            retryFor = { PessimisticLockingFailureException.class,
+                    jakarta.persistence.LockTimeoutException.class}, 
+            maxAttempts = 3,                                        // 최대 3번 시도
+            backoff = @Backoff(delay = 500)                         // 재시도 간격 (0.5초 대기)
+    )
     @Transactional
     public BudgetUpdateResponse updateBudget(
             Long roomId, Long userId,

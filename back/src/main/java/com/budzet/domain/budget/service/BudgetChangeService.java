@@ -15,6 +15,9 @@ import com.budzet.domain.user.repository.UserRepository;
 import com.budzet.global.exception.BusinessException;
 import com.budzet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,12 @@ public class BudgetChangeService {
     private final BudgetService budgetService;
     private final UserRepository userRepository;
 
+    @Retryable(
+            retryFor = { PessimisticLockingFailureException.class,
+                    jakarta.persistence.LockTimeoutException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 500)
+    )
     @Transactional
     public BudgetChangeCreateResponse createBudgetChange(
             Long roomId,
@@ -109,6 +118,12 @@ public class BudgetChangeService {
         return BudgetChangeDetailResponse.from(budgetChange);
     }
 
+    @Retryable(
+            retryFor = { PessimisticLockingFailureException.class,
+                    jakarta.persistence.LockTimeoutException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 500)
+    )
     @Transactional
     public BudgetChangeUpdateResponse updateBudgetChange(
             Long roomId, Long userId, Long changeId, BudgetChangeUpdateRequest updateRequest){
