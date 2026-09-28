@@ -40,6 +40,10 @@ public class BudgetChangeService {
         BudgetRequest budgetRequest = budgetRequestRepository.findById(requestId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_REQUEST_NOT_FOUND));
 
+        if(!budgetRequest.getRoom().getId().equals(roomId)){
+            throw new BusinessException(ErrorCode.BAD_REQUEST,"해당 모임의 신청건이 아닙니다.");
+        }
+
         //해당 신청의 신청자인지 확인
         if(!budgetRequest.getUser().getId().equals(userId)){
             throw new BusinessException(ErrorCode.FORBIDDEN_REQUEST_WRITER);
@@ -97,6 +101,10 @@ public class BudgetChangeService {
 
         BudgetChange budgetChange = budgetChangeRepository.findById(changeId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.BUDGET_CHANGE_NOT_FOUND));
+
+        if(!budgetChange.getRoom().getId().equals(roomId)){
+            throw new BusinessException(ErrorCode.BAD_REQUEST,"해당 모임의 정산건이 아닙니다.");
+        }
 
         return BudgetChangeDetailResponse.from(budgetChange);
     }
