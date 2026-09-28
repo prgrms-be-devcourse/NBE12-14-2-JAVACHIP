@@ -67,7 +67,7 @@ public class BudgetChangeServiceTest {
         when(budgetRequestRepository.findById(requestId)).thenReturn(Optional.of(budgetRequest));
         when(budgetRequest.getUser()).thenReturn(user);
         when(user.getId()).thenReturn(userId);
-        when(budgetRequest.getStatus()).thenReturn("APPROVED");
+        when(budgetRequest.getStatus()).thenReturn("APPROVE");
         when(budgetRequest.getRequestedAmount()).thenReturn(10000L);
 
         when(budgetService.findByRoomIdWithLock(roomId)).thenReturn(room);

@@ -118,7 +118,7 @@ public class BudgetControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value(200))
-                .andExpect(jsonPath("$.message").value("예산 변동 목록 조회에 성공하였습니다."))
+                .andExpect(jsonPath("$.message").value("예산 변경 목록 조회에 성공하였습니다."))
                 .andExpect(jsonPath("$.data.history[0].id").value(10L))
                 .andExpect(jsonPath("$.data.history[0].changedBudget").value(8000L))
                 .andExpect(jsonPath("$.data.history[0].type").value("SETTLEMENT"))
@@ -145,7 +145,7 @@ public class BudgetControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value(200))
-                .andExpect(jsonPath("$.message").value("예산 수정에 성공하였습니다."))
+                .andExpect(jsonPath("$.message").value("예산 변경에 성공하였습니다."))
                 .andExpect(jsonPath("$.data.roomId").value(1L))
                 .andExpect(jsonPath("$.data.totalBudget").value(15000L));
     }
@@ -225,7 +225,7 @@ public class BudgetControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.resultCode").value(201))
-                .andExpect(jsonPath("$.message").value("정산 내역 등록 성공"))
+                .andExpect(jsonPath("$.message").value("정산 처리 성공"))
                 .andExpect(jsonPath("$.data.id").value(changeId))
                 .andExpect(jsonPath("$.data.requestId").value(requestId))
                 .andExpect(jsonPath("$.data.userId").value(testUserId))

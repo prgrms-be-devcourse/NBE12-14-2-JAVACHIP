@@ -166,18 +166,19 @@ public class BudgetServiceTest {
         UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
         Room room = mock(Room.class);
         LocalDateTime now = LocalDateTime.now();
+        List<BudgetType> budGetTypes = List.of(BudgetType.INCREASE,BudgetType.DECREASE);
 
         when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
                 .thenReturn(Optional.of(userRoomConnection));
 
-        when(budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId))
+        when(budgetChangeRepository.findAllByRoomIdAndTypeInOrderByCreatedAtDesc(roomId,budGetTypes))
                 .thenReturn(List.of(budgetChange));
         when(roomRepository.findById(roomId))
                 .thenReturn(Optional.of(room));
 
         when(budgetChange.getId()).thenReturn(10L);
         when(budgetChange.getChangedBudget()).thenReturn(8000L);
-        when(budgetChange.getType()).thenReturn(BudgetType.SETTLEMENT);
+        when(budgetChange.getType()).thenReturn(BudgetType.INCREASE);
         when(budgetChange.getUserName()).thenReturn("홍길동");
         when(budgetChange.getReason()).thenReturn("장비대여");
         when(budgetChange.getCreatedAt()).thenReturn(now);
@@ -192,7 +193,7 @@ public class BudgetServiceTest {
         BudgetHistoryResponse.HistoryItem historyItem = result.history().getFirst();
         assertEquals(10L, historyItem.id());
         assertEquals(8000L, historyItem.changedBudget());
-        assertEquals("SETTLEMENT", historyItem.type());
+        assertEquals("INCREASE", historyItem.type());
         assertEquals("홍길동", historyItem.userName());
         assertEquals("장비대여", historyItem.reason());
         assertEquals(now, historyItem.processedAt());
@@ -208,11 +209,12 @@ public class BudgetServiceTest {
         Long userId = 100L;
         Room room = mock(Room.class);
         UserRoomConnection userRoomConnection = mock(UserRoomConnection.class);
+        List<BudgetType> budGetTypes = List.of(BudgetType.INCREASE,BudgetType.DECREASE);
 
         when(userRoomConnectionRepository.findByUser_IdAndRoom_Id(userId, roomId))
                 .thenReturn(Optional.of(userRoomConnection));
 
-        when(budgetChangeRepository.findAllByRoomIdOrderByCreatedAtDesc(roomId))
+        when(budgetChangeRepository.findAllByRoomIdAndTypeInOrderByCreatedAtDesc(roomId,budGetTypes))
                 .thenReturn(Collections.emptyList());
 
         when(roomRepository.findById(roomId))
