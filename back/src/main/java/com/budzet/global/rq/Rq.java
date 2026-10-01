@@ -48,7 +48,8 @@ public class Rq {
                 .path("/")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("None")
+                // .sameSite("None")
+                .sameSite("Lax")
                 .maxAge(maxAge)
                 .build();
 
@@ -60,7 +61,8 @@ public class Rq {
                 .path("/")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("None")
+                // .sameSite("None")
+                .sameSite("Lax")
                 .maxAge(0)
                 .build();
 
